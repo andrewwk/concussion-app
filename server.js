@@ -11,9 +11,9 @@ const bodyParser        = require('body-parser');
 const request           = require('request');
 const apiai             = require('apiai');
 const app               = express();
-const apiaiApp         = apiai(APIAI_TOKEN)
+const apiaiApp          = apiai(APIAI_TOKEN)
 
-sendMessage = (event) => {
+const sendMessage = (event) => {
 
   let sender = event.sender.id;
   let text   = event.message.text;
