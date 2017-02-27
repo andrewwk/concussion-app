@@ -5,7 +5,9 @@ const app          = express();
 const ENV          = process.env.ENV || "development";
 const PORT         = process.env.PORT || 8080
 
-app.get('/', (req, res) => res.status(200).send('1722484629'));
+app.get('/', (req, res) => res.status(200).send('app connected and made get request to root.'));
+
+app.get('/webhook', (req, res) => res.status(200).send('app connected and made get request to root.'));
 
 app.use((req, res) => res.status(404).send('Error 404. This path does not exist.'));
 
