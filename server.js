@@ -22,7 +22,7 @@ app.get('/', (req, res) => res.status(200).send('app connected and made get requ
 /* For Facebook Validation */
 app.get('/webhook', (req, res) => {
   console.log(req.query);
-  if (req.query['hub.mode'] && req.query['hub.verify_token'] === 'concussion-app-token') {
+  if (req.query['hub.mode'] && req.query['hub.verify_token'] === process.env.APP_VERIFY_TOKEN) {
     return res.status(200).send(req.query['hub.challenge']);
   }
   // otherwise, not authorized
