@@ -11,13 +11,7 @@ app.use(bodyParser.json())
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }))
 
-
 app.get('/', (req, res) => res.status(200).send('app connected and made get request to root.'));
-
-// app.get('/webhook', (req, res) => res.status(200).send(''));
-//
-// app.post('/webhook', (req, res) => {
-// })
 
 /* For Facebook Validation */
 app.get('/webhook', (req, res) => {
