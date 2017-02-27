@@ -22,11 +22,11 @@ app.get('/', (req, res) => res.status(200).send('app connected and made get requ
 /* For Facebook Validation */
 app.get('/webhook', (req, res) => {
   console.log(req.query);
-  if (req.query['hub.mode'] && req.query['hub.verify_token'] === process.env.FB_PAGE_ACCESS_TOKEN) {
-    res.status(200).send(req.query['hub.challenge']);
-  } else {
-    res.status(403).end();
+  if (req.query['hub.mode'] && req.query['hub.verify_token'] === 'concussion-app-token') {
+    return res.status(200).send(req.query['hub.challenge']);
   }
+  // otherwise, not authorized
+  return res.status(403).end();
 });
 
 /* Handling all messenges */
