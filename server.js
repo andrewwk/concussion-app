@@ -1,32 +1,55 @@
 require('dotenv').config();
 
-const express    = require('express');
-const bodyParser = require('body-parser');
-const require    = require('request');
-const ENV        = process.env.ENV || "development";
-const PORT       = process.env.PORT || 8080
-const app        = express();
+const PAGE_ACCESS_TOKEN = process.env.FB_PAGE_ACCESS_TOKEN;
+const APIAI_TOKEN       = process.env.API_AI_CLIENT_ACCESS_TOKEN;
+const WEATHER_API_KEY   = process.env.WEATHER_API_KEY
+const APP_VERIFY_TOKEN  = process.env.APP_VERIFY_TOKEN
+const ENV               = process.env.ENV || "development";
+const PORT              = process.env.PORT || 8080
+const express           = require('express');
+const bodyParser        = require('body-parser');
+const require           = require('request');
+const apiai             = require('apiai');
+const app               = express();
+const apiadiApp         = apiai(APIAI_TOKEN)
 
-const sendMessage = (event) => {
+sendMessage = (event) => {
+
   let sender = event.sender.id;
   let text   = event.message.text;
 
-  request({
-    url: 'https://graph.facebook.com/v2.6/me/messages',
-    qs: {access_token: process.env.FB_PAGE_ACCESS_TOKEN},
-    method: 'POST',
-    json: {
-      recipient: {id: sender},
-      message: {text: text}
-    }
-  }, (error, response) => {
-    if (error) {
-        console.log('Error sending message: ', error);
-    } else if (response.body.error) {
-        console.log('Error: ', response.body.error);
-    }
+  let apiai = apiaiApp.textRequest(text, {
+    sessionId: 'tabby_cat'
   });
-}
+
+  apiai.on('response', (response) => {
+    console.log(response)
+    let aiText = response.result.fulfillment.speech;
+
+    request({
+      url: 'https://graph.facebook.com/v2.6/me/messages',
+      qs: {access_token: PAGE_ACCESS_TOKEN},
+      method: 'POST',
+      json: {
+        recipient: {id: sender},
+        message: {text: aiText}
+      }
+    }, (error, response) => {
+      if (error) {
+          console.log('Error sending message: ', error);
+      } else if (response.body.error) {
+          console.log('Error: ', response.body.error);
+      }
+    });
+  });
+
+  apiai.on('error', (error) => {
+    console.log(error);
+  });
+
+  apiai.end();
+};
+
 
 // parse application/json
 app.use(bodyParser.json())
@@ -38,7 +61,7 @@ app.get('/', (req, res) => res.status(200).send('app connected and made get requ
 /* For Facebook Validation */
 app.get('/webhook', (req, res) => {
   console.log(req.query);
-  if (req.query['hub.mode'] && req.query['hub.verify_token'] === process.env.APP_VERIFY_TOKEN) {
+  if (req.query['hub.mode'] && req.query['hub.verify_token'] === APP_VERIFY_TOKEN) {
     return res.status(200).send(req.query['hub.challenge']);
   }
   // otherwise, not authorized
