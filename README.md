@@ -15,3 +15,7 @@
 - git add .
 - git commit -am "make it better"
 - git push heroku master
+
+## App Domain
+
+https://concussion-app.herokuapp.com/
