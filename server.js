@@ -26,7 +26,7 @@ const sendMessage = (event) => {
     console.log(response)
     let aiText = response.result.fulfillment.speech;
 
-    request({
+    let opts = {
       url: 'https://graph.facebook.com/v2.6/me/messages',
       qs: {access_token: PAGE_ACCESS_TOKEN},
       method: 'POST',
@@ -34,7 +34,11 @@ const sendMessage = (event) => {
         recipient: {id: sender},
         message: {text: aiText}
       }
-    }, (error, response) => {
+    }
+
+    console.log(123123, opts)
+
+    request(opts, (error, response) => {
       if (error) {
           console.log('Error sending message: ', error);
       } else if (response.body.error) {
