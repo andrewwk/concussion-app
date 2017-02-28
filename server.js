@@ -16,6 +16,11 @@ const apiaiApp          = apiai(APIAI_TOKEN)
 const sendMessage = (event) => {
 
   console.log("this is the event", event);
+  console.log('==========================================');
+  console.log("this is the sender", event.sender);
+  console.log('==========================================');
+  console.log("this is the message", event.message);
+  console.log('==========================================');
 
   let sender = event.sender.id;
   let text   = event.message.text;
@@ -25,7 +30,7 @@ const sendMessage = (event) => {
   });
 
   apiai.on('response', (response) => {
-    console.log(response)
+    console.log('RESPONSE', response)
     let aiText = response.result.fulfillment.speech;
 
     request({
@@ -46,7 +51,7 @@ const sendMessage = (event) => {
   });
 
   apiai.on('error', (error) => {
-    console.log(error);
+    console.log('ERROR', error);
   });
 
   apiai.end();
