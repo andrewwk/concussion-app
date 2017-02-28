@@ -15,6 +15,9 @@ const apiaiApp          = apiai(APIAI_TOKEN)
 
 const sendMessage = (event) => {
 
+  let message = { id: event.sender.id, message: event.message.text}
+  console.log("NEW MESSAGE OBJECT");
+
   console.log("this is the event", event);
   console.log('==========================================');
   console.log("this is the sender", event.sender);
