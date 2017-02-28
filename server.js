@@ -80,7 +80,7 @@ app.get('/webhook', (req, res) => {
 
 /* Handling all messenges */
 app.post('/webhook', (req, res) => {
-  console.log(req.body);
+  console.log('THIS IS THE INCOMING MESSAGE BODY', req.body);
   if (req.body.object === 'page') {
     req.body.entry.forEach((entry) => {
       entry.messaging.forEach((event) => {
