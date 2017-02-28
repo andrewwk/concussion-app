@@ -33,7 +33,7 @@ const sendMessage = (event) => {
   });
 
   apiai.on('response', (response) => {
-    console.log('RESPONSE', response)
+    console.log('RESPONSE.result.contexts', response.result.contexts)
     let aiText = response.result.fulfillment.speech;
 
     request({
