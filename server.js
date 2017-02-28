@@ -15,6 +15,8 @@ const apiaiApp          = apiai(APIAI_TOKEN)
 
 const sendMessage = (event) => {
 
+  console.log("this is the event", event);
+
   let sender = event.sender.id;
   let text   = event.message.text;
 
@@ -26,7 +28,7 @@ const sendMessage = (event) => {
     console.log(response)
     let aiText = response.result.fulfillment.speech;
 
-    let opts = {
+    request({
       url: 'https://graph.facebook.com/v2.6/me/messages',
       qs: {access_token: PAGE_ACCESS_TOKEN},
       method: 'POST',
@@ -34,11 +36,7 @@ const sendMessage = (event) => {
         recipient: {id: sender},
         message: {text: aiText}
       }
-    }
-
-    console.log(123123, opts)
-
-    request(opts, (error, response) => {
+    }, (error, response) => {
       if (error) {
           console.log('Error sending message: ', error);
       } else if (response.body.error) {
