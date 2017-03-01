@@ -12,6 +12,8 @@ const request           = require('request');
 const apiai             = require('apiai');
 const app               = express();
 const apiaiApp          = apiai(APIAI_TOKEN)
+const SparkPost         = require('sparkpost');
+const sparky            = new SparkPost('<API KEY>');
 
 const sendMessage = (event) => {
 
@@ -91,6 +93,28 @@ app.post('/webhook', (req, res) => {
     });
     res.status(200).end();
   }
+});
+
+sparky.transmissions.send({
+  options: {
+    sandbox: true
+  },
+  content: {
+    from: 'testing@sparkpostbox.com',
+    subject: 'Oh Hey!',
+    html: '<html><body><p>Testing SparkPost</p></body></html>'
+  },
+  recipients: [
+    {address: 'dylantoyne@gmail.com'}
+  ]
+})
+.then(data => {
+  console.log('Woohoo! You just sent your first mailing!');
+  console.log(data);
+})
+.catch(err => {
+  console.log('Whoops! Something went wrong');
+  console.log(err);
 });
 
 app.use((req, res) => res.status(404).send('Error 404. This path does not exist.'));
