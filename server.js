@@ -2,7 +2,7 @@ require('dotenv').config();
 
 const PAGE_ACCESS_TOKEN = process.env.FB_PAGE_ACCESS_TOKEN;
 const APIAI_TOKEN       = process.env.APIAI_TOKEN;
-const WEATHER_API_KEY   = process.env.WEATHER_API_KEY
+// const WEATHER_API_KEY   = process.env.WEATHER_API_KEY
 const APP_VERIFY_TOKEN  = process.env.APP_VERIFY_TOKEN
 const ENV               = process.env.ENV || "development";
 const PORT              = process.env.PORT || 8080
@@ -31,6 +31,8 @@ const sendMessage = (event) => {
   let apiai = apiaiApp.textRequest(text, {
     sessionId: 'tabby_cat'
   });
+
+
 
   apiai.on('response', (response) => {
     console.log('RESPONSE', response)
@@ -74,13 +76,14 @@ app.get('/webhook', (req, res) => {
   if (req.query['hub.mode'] && req.query['hub.verify_token'] === APP_VERIFY_TOKEN) {
     return res.status(200).send(req.query['hub.challenge']);
   }
-  // otherwise, not authorized
-  return res.status(403).end();
+    // otherwise, not authorized
+    return res.status(403).end();
 });
 
 /* Handling all messenges */
 app.post('/webhook', (req, res) => {
   console.log('THIS IS THE INCOMING MESSAGE BODY', req.body);
+  console.log("This is the entry: ", req.body.entry)
   if (req.body.object === 'page') {
     req.body.entry.forEach((entry) => {
       entry.messaging.forEach((event) => {
@@ -92,6 +95,8 @@ app.post('/webhook', (req, res) => {
     res.status(200).end();
   }
 });
+
+// curl -X GET "https://graph.facebook.com/v2.6/1369056796499940?fields=first_name,last_name,profile_pic,locale,timezone,gender&access_token=EAAD0XCDx7EgBAFReJz05AaNkNW7aJDDD98ykE62tgDpqDGGfbbUAI1XXFlAhRo4ZBCvKcMQC8r4N2m4neweBOPGZBhdx2lSSd0YyKzqX8LhmmPODhwZCMe7o9c97uFEmZCi3S6k60qZBzZCGUytmPyZCpwyfFkFsF73hQlo2A44rQZDZD"
 
 app.use((req, res) => res.status(404).send('Error 404. This path does not exist.'));
 
