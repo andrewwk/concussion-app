@@ -18,15 +18,6 @@ const sparky            = new SparkPost('<API KEY>');
 const sendMessage = (event) => {
 
   let message = { id: event.sender.id, message: event.message.text}
-  console.log("NEW MESSAGE OBJECT");
-
-  console.log("this is the event", event);
-  console.log('==========================================');
-  console.log("this is the sender", event.sender);
-  console.log('==========================================');
-  console.log("this is the message", event.message);
-  console.log('==========================================');
-
   let sender = event.sender.id;
   let text   = event.message.text;
 
@@ -35,7 +26,7 @@ const sendMessage = (event) => {
   });
 
   apiai.on('response', (response) => {
-    console.log('RESPONSE', response)
+    console.log('Response:', response)
     let aiText = response.result.fulfillment.speech;
 
     request({
@@ -56,7 +47,7 @@ const sendMessage = (event) => {
   });
 
   apiai.on('error', (error) => {
-    console.log('ERROR', error);
+    console.log('Error!', error);
   });
 
   apiai.end();
@@ -72,17 +63,14 @@ app.get('/', (req, res) => res.status(200).send('app connected and made get requ
 
 /* For Facebook Validation */
 app.get('/webhook', (req, res) => {
-  console.log(req.query);
   if (req.query['hub.mode'] && req.query['hub.verify_token'] === APP_VERIFY_TOKEN) {
     return res.status(200).send(req.query['hub.challenge']);
   }
-  // otherwise, not authorized
   return res.status(403).end();
 });
 
-/* Handling all messenges */
+/* Handling all messages */
 app.post('/webhook', (req, res) => {
-  console.log('THIS IS THE INCOMING MESSAGE BODY', req.body);
   if (req.body.object === 'page') {
     req.body.entry.forEach((entry) => {
       entry.messaging.forEach((event) => {
