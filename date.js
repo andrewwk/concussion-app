@@ -102,10 +102,9 @@ const checkYear = (input) => {
 console.log(checkYear(2016));
 console.log(checkYear(2017));
 
-const checkTime = (input) => {
-  // 24 hour time
-  // const currentHour = new Date().getHours()
+// Andrew - function to validate user input for the current hour with a one hour threshold
 
+const checkTime = (input) => {
   // 12 hour time
   const currentHour = (new Date().getHours()) % 12
   return currentHour - input <= 1
