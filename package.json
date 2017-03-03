@@ -4,9 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node server.js",
-    "debug": "node debug server.js",
-    "test": "node debug server.js"
+    "start": "node server",
+    "debugger": "node debug server"
   },
   "keywords": [],
   "author": "",

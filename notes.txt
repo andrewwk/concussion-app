@@ -1,0 +1,10 @@
+Incoming Message From Facebook
+
+> req.body.entry[0].messaging
+[ { sender: { id: '1207521742649806' },
+    recipient: { id: '274664636304054' },
+    timestamp: 1488557634709,
+    message:
+     { mid: 'mid.1488557634709:599ff57c20',
+       seq: 3993,
+       text: 'january' } } ]
