@@ -2,6 +2,7 @@
     Global:
     A very basic CSS reset
 ------------------------------------- */
+
 * {
   margin: 0;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -28,6 +29,7 @@ table td {
 /* -------------------------------------
     Body & Container:
 ------------------------------------- */
+
 body {
   background-color: #7b7b7b;
 }
@@ -55,6 +57,7 @@ body {
 /* -------------------------------------
     Header & Main:
 ------------------------------------- */
+
 .main {
   background-color: #e5e5e5;
   border: 1px solid #e9e9e9;
@@ -66,7 +69,7 @@ body {
 }
 
 .content-block {
-  padding-top: 10px;
+  padding-top: 2px;
   padding-bottom: 2px;
 }
 
@@ -75,20 +78,10 @@ body {
   margin-bottom: 20px;
 }
 
-.footer {
-  width: 100%;
-  clear: both;
-  color: #999;
-  padding: 20px;
-}
-.footer p, .footer a, .footer td {
-  color: #999;
-  font-size: 12px;
-}
-
 /* -------------------------------------
     Typography:
 ------------------------------------- */
+
 h1, h2, h3 {
   font-family: "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
   color: #000;
@@ -119,6 +112,7 @@ p, ul, ol {
   margin-bottom: 10px;
   font-weight: normal;
 }
+
 p li, ul li, ol li {
   margin-left: 5px;
   list-style-position: inside;
@@ -127,6 +121,7 @@ p li, ul li, ol li {
 /* -------------------------------------
     Email Button:
 ------------------------------------- */
+
 a {
   color: #348eda;
   text-decoration: underline;
@@ -205,6 +200,7 @@ a {
 /* -------------------------------------
     RESPONSIVE AND MOBILE FRIENDLY STYLES
 ------------------------------------- */
+
 @media only screen and (max-width: 640px) {
   body {
     padding: 0 !important;
