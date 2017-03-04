@@ -78,7 +78,7 @@ const sendMessage = (event) => {
       THIS IS THE MESSAGE TEXT : ${event.message.text}
     ==============================================================
     `);
-  const senderID      = event.sender.id;
+  const senderID    = event.sender.id;
   const userMessage = event.message.text;
 
   const apiai = apiaiApp.textRequest(userMessage, {
@@ -87,18 +87,17 @@ const sendMessage = (event) => {
 
   apiai.on('response', (response) => {
     console.log(`Response Result => ${response.result}`);
-    debugger;
-
-
-    if (response.result.contexts.length > 0 && response.result.contexts[0].parameters.validMonth) {
-      const testName     = response.result.contexts[1].name
-      const testQuestion = response.result.contexts[0].parameters
-      const userResponse = response.result.contexts[0].parameters.validMonth.original
-      console.log(`
-        TEST NAME     : ${testName}
-        QUESTION      : ${testQuestion}
-        USER RESPONSE : ${userResponse}
-        `);
+    if (response.result.contexts) {
+      if (response.result.contexts.length > 0 && response.result.contexts[0].parameters.validMonth) {
+        const testName     = response.result.contexts[1].name
+        const testQuestion = response.result.contexts[0].parameters
+        const userResponse = response.result.contexts[0].parameters.validMonth.original
+        console.log(`
+          TEST NAME     : ${testName}
+          QUESTION      : ${testQuestion}
+          USER RESPONSE : ${userResponse}
+          `);
+        }
     }
 
     // if (response.result.contexts[0].name) {
@@ -150,28 +149,26 @@ app.get('/webhook', (req, res) => {
 
 /* Handling all messenges */
 app.post('/webhook', (req, res) => {
+
+  let incomingMessage = req.body.entry[0].messaging
+  let sender          = req.body.entry[0].messaging[0].sender
+  let senderID        = req.body.entry[0].messaging[0].sender.id
   let messageContent;
   let payload;
-  const incomingMessage = req.body.entry[0].messaging
-  const sender          = req.body.entry[0].messaging[0].sender
-  const senderID        = req.body.entry[0].messaging[0].sender.id
 
   if (req.body.entry[0].messaging[0].message) {
     messageContent  = req.body.entry[0].messaging[0].message.text;
   }
-
   if (req.body.entry[0].messaging[0].postback) {
     payload = req.body.entry[0].messaging[0].postback;
     printData(payload);
   }
-
   console.log(`
     INCOMING MESSAGE : ${incomingMessage}
     MESSAGE CONTENT  : ${messageContent}
     SENDER           : ${sender}
     SENDERID         : ${senderID}
     `);
-
   userDiagnosis.conversationID = senderID
   userDiagnosis.howDoYouFeel.push(messageContent)
   console.log(`USER REPORT ID: ${userDiagnosis.conversationID}`);
@@ -181,6 +178,7 @@ app.post('/webhook', (req, res) => {
     req.body.entry.forEach((entry) => {
       entry.messaging.forEach((event) => {
         if (event.message && event.message.text) {
+          debugger;
           sendMessage(event);
         }
       });

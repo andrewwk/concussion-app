@@ -23,11 +23,11 @@ const months = [
   'december'
 ];
 
-// Andrew - function to validate current month
+// Andrew - function to validate current month (string)
 const checkMonth = (input) => {
   const todayInt = new Date().getMonth();
   const todayStr = months[todayInt];
-  return input === todayStr;
+  return input.toLowerCase() === todayStr;
 };
 
 // Andrew - function to validate user input for current day of month (number)
@@ -41,7 +41,7 @@ const checkDate = (input) => {
 const checkDayOfWeek = (input) => {
   const today = new Date().getDay();
   const weekday = days[today];
-  return input === weekday;
+  return input.toLowerCase() === weekday;
 };
 
 // Andrew - function to validate user input for the current year
@@ -54,6 +54,10 @@ const checkYear = (input) => {
 const checkTime = (input) => {
   const currentHour = (new Date().getHours()) % 12
   return currentHour - input <= 1
+}
+
+const monthCheck = (input) => {
+  return months.includes(input)
 }
 
 module.exports = {
