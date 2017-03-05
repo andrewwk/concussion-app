@@ -50,7 +50,7 @@ const printArray = (arr) => {
 //   .then()
 //   .catch();
 
-// Andrew - print error object
+// Andrew - print error and data objects
 const printData = (data) => {
   if (data.constructor === Object) {
     for (log in data) {
@@ -70,10 +70,10 @@ const printData = (data) => {
   }
   console.log(`Data type match not found. Sheeiitttt....${data}`);
 }
+
 const identifyQuestion = (params, userResponse) => {
   if (questions[params]) {
     console.log(`Parameter Matched to Question ${questions[params]}`);
-    debugger;
   }
   if (orientation[params]) {
     const orientationFunction = orientation[params]
@@ -94,6 +94,7 @@ const printContexts = (message) => {
       testName: elm.name,
     })
     if (elm.parameters) {
+      debugger;
       for (val in elm.parameters) {
         identifyQuestion(val, elm.parameters[val])
         // User Response
@@ -186,20 +187,8 @@ app.post('/webhook', (req, res) => {
   let senderID        = req.body.entry[0].messaging[0].sender.id
   let messageContent;
   let payload;
-
-  // if (req.body.entry[0].messaging[0].message) {
-  //   messageContent  = req.body.entry[0].messaging[0].message.text;
-  // }
-  // if (req.body.entry[0].messaging[0].postback) {
-  //   payload = req.body.entry[0].messaging[0].postback;
-  //   console.log(`req.body.entry[0].messaging[0].postback`);
-  //   printData(payload);
-  // }
   // userDiagnosis.conversationID = senderID
   // userDiagnosis.howDoYouFeel.push(messageContent)
-  // console.log(`USER REPORT ID: ${userDiagnosis.conversationID}`);
-  // console.log(`USER REPORT HOWDOYOUFEEL: ${userDiagnosis.howDoYouFeel}`);
-
   if (req.body.object === 'page') {
     req.body.entry.forEach((entry) => {
       entry.messaging.forEach((event) => {
