@@ -23,6 +23,11 @@ const questions = {
   nervousOrAnxious        : 'Nervous Or Anxious',
   symptomsWorseMental     : 'Symptoms Worse Mental',
   symptomsWorsePhysical   : 'Symptoms Worse Physical'
+  checkMonth              : 'What month is it?',
+  checkDate               : 'What is the date today?',
+  checkDayOfWeek          : 'What is teh day of the week?',
+  checkYear               : 'What year is it?',
+  checkTime               : 'What hour is it right now?'
 }
 
 module.exports = questions
