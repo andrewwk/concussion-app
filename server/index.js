@@ -71,19 +71,43 @@ const printData = (data) => {
   console.log(`Data type match not found. Sheeiitttt....${data}`);
 }
 
+const userQA = (params) => {
+  for (question in params) {
+    if (!question.includes('original')) {
+
+      console.log(`Question: ${question} Answer: ${params[question]}`);
+    }
+  }
+}
+
 const identifyQuestion = (params, userResponse) => {
   if (questions[params]) {
-    console.log(`Parameter Matched to Question ${questions[params]}`);
+    let question = questions[params]
+    let answer = userResponse
+    console.log(`
+      Parameter Matched to Question : ${question}
+      User Answer : ${answer}
+      `);
   }
   if (orientation[params]) {
     const orientationFunction = orientation[params]
+    let question = question[params]
+    let answer = userResponse
+    let score = orientationFunction(answer)
     console.log(`
       Parameter Matched to Orientation Function
-      ===> Making Function Call with Function : ${orientationFunction}
-      ===> Function Parameter : ${userResponse}
-      ===> ${orientationFunction(userResponse)}
+      ===> Question : ${question}
+      ===> Answer : ${answer}
+      ===> Score : ${score}
       -------------------------------------------------------------------------------------------
       `);
+    // console.log(`
+    //   Parameter Matched to Orientation Function
+    //   ===> Making Function Call with Function : ${orientationFunction}
+    //   ===> Function Parameter AKA User Response : ${userResponse}
+    //   ===> ${orientationFunction(userResponse)}
+    //   -------------------------------------------------------------------------------------------
+    //   `);
   }
 }
 const printContexts = (message) => {
@@ -94,6 +118,7 @@ const printContexts = (message) => {
       testName: elm.name,
     })
     if (elm.parameters) {
+      userQA(elm.parameters)
       debugger;
       for (val in elm.parameters) {
         identifyQuestion(val, elm.parameters[val])
