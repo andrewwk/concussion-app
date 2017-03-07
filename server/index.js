@@ -1,35 +1,74 @@
 require('dotenv').config();
 
-const PAGE_ACCESS_TOKEN = process.env.FB_PAGE_ACCESS_TOKEN;
-const APIAI_TOKEN       = process.env.APIAI_TOKEN;
-const APP_VERIFY_TOKEN  = process.env.APP_VERIFY_TOKEN;
-const ENV               = process.env.ENV  || 'development';
-const PORT              = process.env.PORT || 8080;
-const express           = require('express');
-const bodyParser        = require('body-parser');
-const request           = require('request');
-const apiai             = require('apiai');
-const app               = express();
-const apiaiApp          = apiai(APIAI_TOKEN);
-const orientation       = require('./orientation'); // Functions for Orientation Tests
-const questions         = require('./dictionary'); // Object containing HYDF Questions
-const memoryRecall      = require('./memory-recall'); // Function to match string for recall tests
+const PAGE_ACCESS_TOKEN  = process.env.FB_PAGE_ACCESS_TOKEN;
+const APIAI_TOKEN        = process.env.APIAI_TOKEN;
+const APP_VERIFY_TOKEN   = process.env.APP_VERIFY_TOKEN;
+const ENV                = process.env.ENV  || 'development';
+const PORT               = process.env.PORT || 8080;
+const express            = require('express');
+const bodyParser         = require('body-parser');
+const request            = require('request');
+const apiai              = require('apiai');
+const app                = express();
+const apiaiApp           = apiai(APIAI_TOKEN);
+const orientation        = require('./orientation'); // Functions for Orientation Tests
+const questions          = require('./dictionary'); // Object containing Test Questions
+const hydf               = questions.hydf;
+const psocYes            = questions.psocYes;
+const psocNo             = questions.psocNo;
+const sacOrientation     = questions.sacOrientation;
+const sacImmediateMemory = questions.sacImmediateMemory;
+const sacConcentration   = questions.sacConcentration;
+const sacDelayedRecall   = questions.sacDelayedRecall;
+const memoryRecall       = require('./memory-recall'); // Function to match string for recall tests
+const printData          = require('./print-data'); // Function to print data objects
+const userReport         = require('./user-report');  //User Report Object going into DB.
+const concentration      = require('./concentration');
 
 // parse application/json
 app.use(bodyParser.json());
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
+// Andrew - Email Report Object. Different from object going into DB.
+const emailReport = {
+  testDate             : new Date(),
+  numberOfSymptoms     : 0, //  Out of 22
+  symptomSeverityScore : 0, // Out of 132
+  orientation          : 0, //  Out of 5
+  immediateMemory      : 0, // Out of 15
+  concentration        : 0, // Out of 5
+  delayedRecall        : 0, // Out of 5
+  sacTotal             : 0 // Sum Scores
+}
 
-const userDiagnosis = {
-  conversationID: '',
-  howDoYouFeel: [],
-  cognitiveAssessment: []
+const answeredQuestions = [];
+
+const filterQuestions = (question) => {
+  return answeredQuestions.includes(question)
 }
-const printArray = (arr) => {
-  arr.map((elm, index) => {
-    console.log(`${index} : ${elm}`);
-  })
+const pushQuestion = (question) => {
+  if (!filterQuestions(question)) {
+    answeredQuestions.push(question)
+  }
 }
+const updateSACTotalScore = (score) => {
+  if (score > 0) {
+    emailReport.sacTotal += score
+  }
+}
+const updateHYDFScores = (score) => {
+  if (score > 0 && score.constructor === Number) {
+    emailReport.numberOfSymptoms += 1
+    emailReport.symptomSeverityScore += score
+  }
+}
+const printQandA = (question, answer) => {
+  console.log(`
+    Parameter Matched to Question : ${question}
+    User Answer : ${answer}
+    `);
+};
+
 // Mongo DB Connection
 // const mongo = ...
 //
@@ -49,94 +88,121 @@ const printArray = (arr) => {
 // fetchDiagnosisById(...)
 //   .then()
 //   .catch();
+// Andrew - Function to parse user response and parameters. Then matches them to certain portions
+// of the test.
+const questionAnswerScore = (params, userResponse) => {
+  let answer = userResponse
 
-// Andrew - print error and data objects
-const printData = (data) => {
-  if (data.constructor === Object) {
-    for (log in data) {
-      console.log(`Printing Data Object : ${log} => ${data[log]}`);
-    }
+  if (psocYes[params]) {
+    let question = psocYes[params];
+    printQandA(question, answer)
+    userReport.potentialSignsOfConcussion.push({ question : answer })
   }
-  if (data.constructor === Array) {
-    data.map((log) => {
-      console.log(`Printing Data Array : ${log}`);
-    })
+  if (psocNo[params]) {
+    let question = psocNo[params];
+    printQandA(question, answer)
+    userReport.potentialSignsOfConcussion.push({ question : answer })
   }
-  if (data.constructor === String) {
-    console.log(`Printing Data String : ${data}`);
-  }
-  if (data.constructor === Number) {
-    console.log(`Printing Data Number : ${data}`);
-  }
-  console.log(`Data type match not found. Sheeiitttt....${data}`);
-}
-
-const userQA = (params) => {
-  for (question in params) {
-    if (!question.includes('original')) {
-
-      console.log(`Question: ${question} Answer: ${params[question]}`);
-    }
-  }
-}
-
-const identifyQuestion = (params, userResponse) => {
-  if (questions[params]) {
-    let question = questions[params]
-    let answer = userResponse
-    console.log(`
-      Parameter Matched to Question : ${question}
-      User Answer : ${answer}
+  if (hydf[params]) {
+    let question = hydf[params]
+    let score = parseInt(answer)
+    if (!filterQuestions(params)) {
+      pushQuestion(params);
+      updateHYDFScores(score);
+      console.log(`HYDF Matched
+        EMAIL REPORT NUMBER OF SYMPTOMS ==> ${emailReport.numberOfSymptoms}
+        EMAIL REPORT SYMPTOM SEVERITY SCORE ==> ${emailReport.symptomSeverityScore}
       `);
+      printQandA(question, answer);
+      userReport.howDoYouFeel.push({ question : answer });
+      if (score > 0) {
+        updateSACTotalScore(score);
+        emailReport.sacTotal += 1;
+        userReport.numberOfSymptoms += 1;
+        userReport.symptomSeverityScore += score;
+      }
+    }
   }
   if (orientation[params]) {
-    const orientationFunction = orientation[params]
-    let question = question[params]
-    let answer = userResponse
-    let score = orientationFunction(answer)
-    console.log(`
-      Parameter Matched to Orientation Function
-      ===> Question : ${question}
-      ===> Answer : ${answer}
-      ===> Score : ${score}
-      -------------------------------------------------------------------------------------------
+    const orientationFunction = orientation[params];
+    let question = sacOrientation[params];
+    // Andrew - Unary Operator Used to Convert Boolean to Number
+    let result = orientationFunction(answer);
+    let score = +result;
+    if (!filterQuestions(params)) {
+      pushQuestion(params);
+      emailReport.orientation += score;
+      updateSACTotalScore(score);
+      userReport.sacOrientation.push({ question : result });
+      userReport.sacConcentrationScore += score;
+      console.log(`
+        Parameter Matched to Orientation Function
+        ===> Question                       : ${question}
+        ===> Answer                         : ${answer}
+        ===> Unary Operator Converted Score : ${score}
+        -------------------------------------------------------------------------------------------
+        EMAIL REPORT ORIENTATION SCORE ==> ${emailReport.orientation}
+        USER REPORT ORIENTATION SCORE ==> ${userReport.sacOrientationScore}
       `);
-    // console.log(`
-    //   Parameter Matched to Orientation Function
-    //   ===> Making Function Call with Function : ${orientationFunction}
-    //   ===> Function Parameter AKA User Response : ${userResponse}
-    //   ===> ${orientationFunction(userResponse)}
-    //   -------------------------------------------------------------------------------------------
-    //   `);
+    }
+  }
+  if (sacImmediateMemory[params]) {
+    let question = sacImmediateMemory[params];
+    let score = memoryRecall(answer);
+    if (!filterQuestions(params)) {
+      pushQuestion(params);
+      updateSACTotalScore(score);
+      emailReport.immediateMemory += score;
+      emailReport.sacTotalScore += score;
+      userReport.sacMemory.push({ question : answer });
+      userReport.sacMemoryScore += score;
+      console.log(`
+        Parameter Matched To Immediate Memory Function
+        ====> Question : ${question}
+        ====> Answer : ${answer}
+        ====> Score : ${score}
+        -------------------------------------------------------------------------------------------
+        EMAIL REPORT IMMEDIATE MEMORY SCORE ==> ${emailReport.immediateMemory}
+        USER REPORT MEMORY SCORE ==> ${userReport.sacMemoryScore}
+      `);
+    }
+  }
+  if (sacConcentration[params]) {
+    let question = sacConcentration[params];
+    if (!filterQuestions(params)) {
+      pushQuestion(params);
+      let score = +concentration(params, answer);
+      console.log(`
+        Concentration Test Score : ${score}
+      `);
+      emailReport.concentration += score;
+      updateSACTotalScore(score);
+      userReport.sacConcentration.push({ question : answer });
+      userReport.sacMemoryScore += score;
+      console.log(`
+        Parameter Matched To Concentration Memory Function
+        ====> Question : ${question}
+        ====> Answer : ${answer}
+        ====> Score : ${score}
+        -------------------------------------------------------------------------------------------
+        EMAIL REPORT CONCENTRATION SCORE ==> ${emailReport.concentration}
+        USER REPORT CONCENTRATION SCORE ==> ${userReport.sacConcentrationScore}
+      `);
+    }
   }
 }
+
 const printContexts = (message) => {
   const contextsArray = []
   message.map((elm) => {
-    console.log(`Here Are The Mother Fucking Contexts`);
     contextsArray.push({
       testName: elm.name,
     })
     if (elm.parameters) {
-      userQA(elm.parameters)
-      debugger;
       for (val in elm.parameters) {
-        identifyQuestion(val, elm.parameters[val])
-        // User Response
-        console.log(`
-          Here's some more shit => It's the FUCKING user answers ${elm.parameters[val]}
-          `);
-        contextsArray.push({
-          val : elm.parameters[val]
-        })
+        questionAnswerScore(val, elm.parameters[val])
       }
     }
-    printData(elm)
-    console.log(`
-      Here is the fucking contexts array : ${contextsArray}
-      Let's try to print this fucker : ${printData(contextsArray)}
-      `);
-      debugger;
   })
 }
 const sendMessage = (event) => {
@@ -147,26 +213,11 @@ const sendMessage = (event) => {
     sessionId: 'doctor_concussion'
   });
   apiai.on('response', (response) => {
-    console.log(`Response Result =>|| ${printData(response.result)} ||<=`);
+    // console.log(`Response Result =>|| ${printData(response.result)} ||<=`);
     if (response.result.contexts && response.result.contexts.length > 0) {
       console.log(`
-        CONTEXTS EXISTS || HERE'S THE FUCKING CONTEXT
-        =====================================================================================
-        PRINT DATA FUNCTION ${printData(response.result.contexts)}
-        =====================================================================================
         PRINT CONTEXTS FUNCTION ${printContexts(response.result.contexts)}
-        =====================================================================================
         `);
-      if (response.result.contexts.length > 0 && response.result.contexts[0].parameters.validMonth) {
-        const testName     = response.result.contexts[1].name
-        const testQuestion = response.result.contexts[0].parameters
-        const userResponse = response.result.contexts[0].parameters.validMonth.original
-        console.log(`
-          TEST NAME     : ${testName}
-          QUESTION      : ${testQuestion}
-          USER RESPONSE : ${userResponse}
-          `);
-        }
     }
     let aiText = response.result.fulfillment.speech;
     request({
@@ -207,18 +258,10 @@ app.get('/webhook', (req, res) => {
 
 /* Handling all messenges */
 app.post('/webhook', (req, res) => {
-  let incomingMessage = req.body.entry[0].messaging
-  let sender          = req.body.entry[0].messaging[0].sender
-  let senderID        = req.body.entry[0].messaging[0].sender.id
-  let messageContent;
-  let payload;
-  // userDiagnosis.conversationID = senderID
-  // userDiagnosis.howDoYouFeel.push(messageContent)
   if (req.body.object === 'page') {
     req.body.entry.forEach((entry) => {
       entry.messaging.forEach((event) => {
         if (event.message && event.message.text) {
-          // TODO: Create User Object Here
           console.log(`
             Return Message from Server to Facebook : ${event}
              `);
