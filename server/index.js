@@ -148,8 +148,8 @@ const questionAnswerScore = (params, userResponse) => {
   }
   if (sacImmediateMemory[params]) {
     let question = sacImmediateMemory[params];
-    let score = memoryRecall(answer);
     if (!filterQuestions(params)) {
+      let score = memoryRecall(answer);
       pushQuestion(params);
       updateSACTotalScore(score);
       emailReport.immediateMemory += score;
@@ -169,16 +169,16 @@ const questionAnswerScore = (params, userResponse) => {
   }
   if (sacConcentration[params]) {
     let question = sacConcentration[params];
+    let score = +concentration(params, answer);
+
     if (!filterQuestions(params)) {
       pushQuestion(params);
-      let score = +concentration(params, answer);
-      console.log(`
-        Concentration Test Score : ${score}
-      `);
+      userReport.sacConcentration.push({ question : answer });
+
       emailReport.concentration += score;
       updateSACTotalScore(score);
-      userReport.sacConcentration.push({ question : answer });
-      userReport.sacMemoryScore += score;
+      userReport.sacConcentrationScore += score;
+      userReport.sacTotalScore += score;
       console.log(`
         Parameter Matched To Concentration Memory Function
         ====> Question : ${question}
@@ -190,14 +190,41 @@ const questionAnswerScore = (params, userResponse) => {
       `);
     }
   }
-}
+  if (sacDelayedRecall[params]) {
+    let question - sacDelayedRecall[params];
+    let score = memoryRecall(answer);
 
-const printContexts = (message) => {
-  const contextsArray = []
+    if (!filterQuestions[params]) {
+      pushQuestion(params);
+      userReport.sacDelayedRecall.push({ question : answer });
+
+      emailReport.delayedRecall += score;
+      updateSACTotalScore(score);
+      userReport.sacDelayedRecallScore += score;
+      userReport.sacTotalScore += score;
+      console.log(`
+        Parameter Matched To Concentration Memory Function
+        ====> Question : ${question}
+        ====> Answer : ${answer}
+        ====> Score : ${score}
+        -------------------------------------------------------------------------------------------
+        EMAIL REPORT CONCENTRATION SCORE ==> ${emailReport.delayedRecall}
+        USER REPORT CONCENTRATION SCORE ==> ${userReport.sacDelayedRecallScore}
+      `)
+    }
+  }
+  // if (params == 'userEmailOptIn') {
+    // push user email to user report object
+    // trigger email function call
+    // insert either one or both reports into db
+  // }
+  console.log(`
+    SAC TOTAL SCORE EMAIL : ${emailReport.sacTotalScore}
+    SAC TOTAL SCORE REPORT : ${userReport.sacTotalScore}
+    `);
+}
+const contextsEvaluation = (message) => {
   message.map((elm) => {
-    contextsArray.push({
-      testName: elm.name,
-    })
     if (elm.parameters) {
       for (val in elm.parameters) {
         questionAnswerScore(val, elm.parameters[val])
@@ -216,7 +243,7 @@ const sendMessage = (event) => {
     // console.log(`Response Result =>|| ${printData(response.result)} ||<=`);
     if (response.result.contexts && response.result.contexts.length > 0) {
       console.log(`
-        PRINT CONTEXTS FUNCTION ${printContexts(response.result.contexts)}
+        PRINT CONTEXTS FUNCTION ${contextsEvaluation(response.result.contexts)}
         `);
     }
     let aiText = response.result.fulfillment.speech;
@@ -238,7 +265,7 @@ const sendMessage = (event) => {
     });
   });
   apiai.on('error', (error) => {
-    console.log(`APIDI.ON ERROR ${error}`);
+    console.log(`APIAI.ON ERROR ${error}`);
   });
   apiai.end();
 };
