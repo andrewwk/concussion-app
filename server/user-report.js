@@ -13,6 +13,7 @@ const userReport = {
   sacMemoryScore             : 0,
   sacConcentration           : [],
   sacConcentrationScore      : 0,
+  sacDelayedRecall           : [],
   sacDelayedRecallScore      : 0,
   sacTotalScore              : 0
 }
