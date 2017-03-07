@@ -13,6 +13,7 @@ const apiai             = require('apiai');
 const app               = express();
 const apiaiApp          = apiai(APIAI_TOKEN)
 
+
 const sendMessage = (event) => {
 
   let message = { id: event.sender.id, message: event.message.text}
