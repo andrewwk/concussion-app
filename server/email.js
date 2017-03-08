@@ -18,10 +18,6 @@ const questions         = require('./dictionary'); // Object containing HYDF Que
 const mailgun           = require('mailgun-js')({apiKey: api_key, domain: domain});
 
 
-app.get('/report', (req, res) => {
-  res.body.render('report')
-});
-
 const data = {
   from: 'Dylan Toyne <dylantoyne@gmail.com>',
   to: 'dylantoyne@gmail.com',
