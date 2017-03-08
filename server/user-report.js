@@ -18,4 +18,38 @@ const userReport = {
   sacTotalScore              : 0
 }
 
-module.exports = userReport
+module.exports = userReport;
+
+
+// const emailReport = {
+//   conversationID :  {
+//     conversationID       : conversationID,
+//     testDate             : new Date(),
+//     numberOfSymptoms     : 0, //  Out of 22
+//     symptomSeverityScore : 0, // Out of 132
+//     orientation          : 0, //  Out of 5
+//     immediateMemory      : 0, // Out of 15
+//     concentration        : 0, // Out of 5
+//     delayedRecall        : 0, // Out of 5
+//     sacTotal             : 0, // Sum Scores
+//     answeredQuestions    : []
+//   }
+// }
+//
+// const conversations = {};
+//
+// const conversationInit = (id) => {
+//   conversations[id] =
+//     {
+//       conversationID       : id,
+//       testDate             : new Date(),
+//       numberOfSymptoms     : 0, //  Out of 22
+//       symptomSeverityScore : 0, // Out of 132
+//       orientation          : 0, //  Out of 5
+//       immediateMemory      : 0, // Out of 15
+//       concentration        : 0, // Out of 5
+//       delayedRecall        : 0, // Out of 5
+//       sacTotal             : 0, // Sum Scores
+//       answeredQuestions    : []
+//     }
+// }
