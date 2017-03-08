@@ -231,15 +231,18 @@ h1, h2, h3, h4, h5, h6{
 	background-image: url(../images/stars.jpg);
 	color: white;
 }
+
 #parallax {
 	background-image: url(../images/blue_mac2.jpg);
 	color: white;
 }
+
 #contact {
 	background-image: url(../images/stars.jpg);
 	color: white;
 	background-color: #405162;
 }
+
 #parallax h1{
 	margin-bottom: 60px;
 	color: white;
