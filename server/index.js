@@ -1,10 +1,13 @@
 require('dotenv').config();
 
+<<<<<<< HEAD
 const PAGE_ACCESS_TOKEN  = process.env.FB_PAGE_ACCESS_TOKEN;
 const APIAI_TOKEN        = process.env.APIAI_TOKEN;
 const APP_VERIFY_TOKEN   = process.env.APP_VERIFY_TOKEN;
 const ENV                = process.env.ENV  || 'development';
 const PORT               = process.env.PORT || 8080;
+const api_key           = process.env.MAILGUN_API_KEY;
+const domain            = process.env.DOMAIN;
 const express            = require('express');
 const bodyParser         = require('body-parser');
 const request            = require('request');
@@ -13,6 +16,8 @@ const app                = express();
 const MongoClient        = require('mongodb').MongoClient;
 const MONGODB_URI        = process.env.MONGODB_URI;
 const apiaiApp           = apiai(APIAI_TOKEN);
+const request            = require('request');
+const mailgun            = require('mailgun-js')({apiKey: api_key, domain: domain});
 const orientation        = require('./orientation'); // Functions for Orientation Tests
 const questions          = require('./dictionary'); // Object containing Test Questions
 const hydf               = questions.hydf;
@@ -50,6 +55,24 @@ const conversationInit = (id) => {
       sacTotal             : 0, // Sum Scores
       answeredQuestions    : []
     }
+=======
+
+// app.use(express.static(__dirname + '/public'));
+app.use(express.static("public"));
+
+app.set("view engine", "ejs");
+
+// Andrew - Email Report Object. Different from object going into DB.
+const emailReport = {
+  testDate             : new Date(),
+  numberOfSymptoms     : 0, //  Out of 22
+  symptomSeverityScore : 0, // Out of 132
+  orientation          : 0, //  Out of 5
+  immediateMemory      : 0, // Out of 15
+  concentration        : 0, // Out of 5
+  delayedRecall        : 0, // Out of 5
+  sacTotal             : 0 // Sum Scores
+>>>>>>> origin/feature/integration
 }
 
 const filterQuestions = (question, id) => {
@@ -191,8 +214,26 @@ const sendMessage = (event) => {
     sessionId: 'doctor_concussion'
   });
   apiai.on('response', (response) => {
+<<<<<<< HEAD
     if (response.result.contexts && response.result.contexts.length > 0 && senderID) {
       contextsEvaluation(response.result.contexts, senderID);
+=======
+    // console.log(`Response Result =>|| ${printData(response.result)} ||<=`);
+    if (response.result.contexts && response.result.contexts.length > 0) {
+      console.log(`
+        PRINT CONTEXTS FUNCTION ${printContexts(response.result.contexts)}
+        `);
+      if (response.result.contexts.length > 0 && response.result.contexts[0].parameters.validMonth) {
+        const testName     = response.result.contexts[1].name
+        const testQuestion = response.result.contexts[0].parameters
+          const userResponse = response.result.contexts[0].parameters.validMonth.original
+        console.log(`
+          TEST NAME     : ${testName}
+          QUESTION      : ${testQuestion}
+          USER RESPONSE : ${userResponse}
+          `);
+        }
+>>>>>>> origin/feature/integration
     }
     let aiText = response.result.fulfillment.speech;
     request({
@@ -244,6 +285,17 @@ app.post('/webhook', (req, res) => {
     res.status(200).end();
   }
 });
+
+app.get("/home", (req, res) => {
+  res.render("index");
+})
+
+app.post("/home", (req, res) => {
+  if (!req.body) {
+    res.status(400).json({ error: 'Invalid Request: No input in POST body' });
+  return;
+  }
+})
 
 app.use((req, res) => res.status(404).send(`Error 404. This path does not exist.`));
 

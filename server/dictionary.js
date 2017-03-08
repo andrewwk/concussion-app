@@ -79,9 +79,6 @@ const sacDelayedRecall = {
   delayedRecall : delayedRecallQuestion
 }
 
-// userEmailOptOut
-//  If userEmailOptIn call email function
-
 module.exports = {
   hydf               : hydf,
   psocYes            : psocYes,

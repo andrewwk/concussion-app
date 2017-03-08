@@ -1,3 +1,8 @@
+const stringArray  = ['elbow', 'apple', 'carpet', 'saddle', 'bubble'];
+const bobInput     = 'elbow apple';
+const aliceInput   = 'wine carpet chicken';
+const deandreInput = 'cadillac saddle bubble winterberry football'
+
 // Andrew - Array containing the five words used to test users memory
 const recallTestWords  = ['elbow', 'apple', 'carpet', 'saddle', 'bubble'];
 
@@ -13,5 +18,14 @@ const matchStrings = (input) => {
   })
   return score;
 }
+
+// console.log('Bob');
+// console.log(matchStrings(bobInput));
+//
+// console.log('Alice');
+// console.log(matchStrings(aliceInput));
+//
+// console.log('Deandre');
+// console.log(matchStrings(deandreInput));
 
 module.exports = matchStrings;
