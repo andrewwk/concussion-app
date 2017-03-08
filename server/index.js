@@ -73,23 +73,21 @@ const updateHYDFScores = (score, id) => {
     conversations[id].symptomSeverityScore += score
   }
 }
-const printQandA = (question, answer) => {
-  console.log(`
-    Parameter Matched to Question : ${question}
-    User Answer : ${answer}
-    `);
-};
 
-const showTotalScores = (id) => {
-  console.log(`
-    SAC TOTAL SCORE EMAIL : ${conversations[id].sacTotal}
-    SAC TOTAL SCORE REPORT : ${userReports[id].sacTotalScore}
-    `);
-};
+const mongoDB = () => {
+  MongoClient.connect(MONGODB_URI, (err, db) => {
+    if (err) {
+      console.error(`Failed to connect: ${MONGODB_URI}`);
+      throw err;
+    }
+    console.log('Mongo Connected');
+    this.connection = db;
+  });
+}
 
-const clearQuestionsArray = () => {
-  answeredQuestions.length = 0;
-  console.log(`Array Cleared : Length = ${answeredQuestions.length}`);
+const mongoConnect = {
+  connection : '',
+  connect : mongoDB
 }
 // Mongo DB Connection
 // const mongo = ...
@@ -106,7 +104,7 @@ const clearQuestionsArray = () => {
 //       })
 //   })
 // }
-//
+// //
 // fetchDiagnosisById(...)
 //   .then()
 //   .catch();
@@ -124,20 +122,13 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
       userReports[id].howDoYouFeel.push({ question : answer });
       updateHYDFScores(score, id);
       updateSACTotalScore(score, id);
-      console.log(`HYDF Matched
-        ===> Question                       : ${question}
-        ===> Answer                         : ${answer}
-        ===> Score                          : ${score}
-        -------------------------------------------------------------------------------------------
-        EMAIL REPORT NUMBER OF SYMPTOMS ==> ${conversations[id].numberOfSymptoms}
-        EMAIL REPORT SYMPTOM SEVERITY SCORE ==> ${conversations[id].symptomSeverityScore}
-      `);
       showTotalScores(id);
     } else if (!filterQuestions(params, id) && isNaN(score)) {
       pushQuestion(params, id);
       userReports[id].howDoYouFeel.push({ question : answer });
     }
   }
+
   if (orientation[params]) {
     const orientationFunction = orientation[params];
     let question = sacOrientation[params];
@@ -151,18 +142,10 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
       conversations[id].orientation += score;
       userReports[id].sacOrientationScore += score;
       updateSACTotalScore(score, id);
-      console.log(`
-        Parameter Matched to Orientation Function
-        ===> Question                       : ${question}
-        ===> Answer                         : ${answer}
-        ===> Unary Operator Converted Score : ${score}
-        -------------------------------------------------------------------------------------------
-        EMAIL REPORT ORIENTATION SCORE ==> ${conversations[id].orientation}
-        USER REPORT ORIENTATION SCORE ==> ${userReports[id].sacOrientationScore}
-      `);
       showTotalScores(id);
     }
   }
+
   if (sacImmediateMemory[params]) {
     let question = sacImmediateMemory[params];
     let score = memoryRecall(answer);
@@ -170,23 +153,14 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
     if (!filterQuestions(params, id) && !isNaN(score)) {
       pushQuestion(params, id);
       userReports[id].sacMemory.push({ question : answer });
-
       updateSACTotalScore(score, id);
       conversations[id].immediateMemory += score;
       userReports[id].sacMemoryScore    += score;
       userReports[id].sacTotalScore     += score;
-      console.log(`
-        Parameter Matched To Immediate Memory Function
-        ====> Question : ${question}
-        ====> Answer : ${answer}
-        ====> Score : ${score}
-        -------------------------------------------------------------------------------------------
-        EMAIL REPORT IMMEDIATE MEMORY SCORE ==> ${conversations[id].immediateMemory}
-        USER REPORT MEMORY SCORE ==> ${userReports[id].sacMemoryScore}
-      `);
       showTotalScores(id);
     }
   }
+
   if (sacConcentration[params]) {
     let question = sacConcentration[params];
     let score    = +concentration(params, answer);
@@ -199,18 +173,10 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
       conversations[id].concentration  += score;
       userReports[id].sacConcentrationScore += score;
       userReports[id].sacTotalScore         += score;
-      console.log(`
-        Parameter Matched To Concentration Memory Function
-        ====> Question : ${question}
-        ====> Answer   : ${answer}
-        ====> Score    : ${score}
-        -------------------------------------------------------------------------------------------
-        EMAIL REPORT CONCENTRATION SCORE ==> ${conversations[id].concentration}
-        USER REPORT CONCENTRATION SCORE ==> ${userReports[id].sacConcentrationScore}
-      `);
       showTotalScores(id);
     }
   }
+
   if (sacDelayedRecall[params]) {
     let question = sacDelayedRecall[params];
     let score = memoryRecall(answer);
@@ -223,15 +189,6 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
       conversations[id].delayedRecall += score;
       userReports[id].sacDelayedRecallScore += score;
       userReports[id].sacTotalScore += score;
-      console.log(`
-        Parameter Matched To Concentration Memory Function
-        ====> Question : ${question}
-        ====> Answer : ${answer}
-        ====> Score : ${score}
-        -------------------------------------------------------------------------------------------
-        EMAIL REPORT DELAYED RECALL SCORE ==> ${conversations[id].delayedRecall}
-        USER REPORT DELAYED RECALL SCORE ==> ${userReports[id].sacDelayedRecallScore}
-      `)
       showTotalScores(id);
     }
   }
@@ -325,4 +282,4 @@ app.post('/webhook', (req, res) => {
 
 app.use((req, res) => res.status(404).send(`Error 404. This path does not exist.`));
 
-app.listen(PORT, () => console.log(`Example app listening on port ${PORT}!`));
+app.listen(PORT, () => console.log(`Example app listening on port ${PORT}! ${mongoConnect.connect}`));
