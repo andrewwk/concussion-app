@@ -24,7 +24,9 @@ const sacConcentration   = questions.sacConcentration;
 const sacDelayedRecall   = questions.sacDelayedRecall;
 const memoryRecall       = require('./memory-recall'); // Function to match string for recall tests
 const printData          = require('./print-data'); // Function to print data objects
-const userReport         = require('./user-report');  //User Report Object going into DB.
+const dbReport           = require('./user-report');  //User Report Object going into DB.
+const userReports        = dbReport.userReports;
+const userReportInit     = dbReport.userReportInit;
 const concentration      = require('./concentration');
 
 // parse application/json
@@ -62,7 +64,7 @@ const pushQuestion = (question, id) => {
 const updateSACTotalScore = (score, id) => {
   if (score > 0) {
     conversations[id].sacTotal += score;
-    userReport.sacTotalScore += score;
+    userReports[id].sacTotalScore += score;
   }
 }
 const updateHYDFScores = (score, id) => {
@@ -81,7 +83,7 @@ const printQandA = (question, answer) => {
 const showTotalScores = (id) => {
   console.log(`
     SAC TOTAL SCORE EMAIL : ${conversations[id].sacTotal}
-    SAC TOTAL SCORE REPORT : ${userReport.sacTotalScore}
+    SAC TOTAL SCORE REPORT : ${userReports[id].sacTotalScore}
     `);
 };
 
@@ -119,7 +121,7 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
     let score    = parseInt(answer);
     if (!filterQuestions(params, id) && !isNaN(score)) {
       pushQuestion(params, id);
-      userReport.howDoYouFeel.push({ question : answer });
+      userReports[id].howDoYouFeel.push({ question : answer });
       updateHYDFScores(score, id);
       updateSACTotalScore(score, id);
       console.log(`HYDF Matched
@@ -133,7 +135,7 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
       showTotalScores(id);
     } else if (!filterQuestions(params, id) && isNaN(score)) {
       pushQuestion(params, id);
-      userReport.howDoYouFeel.push({ question : answer });
+      userReports[id].howDoYouFeel.push({ question : answer });
     }
   }
   if (orientation[params]) {
@@ -144,10 +146,10 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
 
     if (!filterQuestions(params, id) && !isNaN(score)) {
       pushQuestion(params, id);
-      userReport.sacOrientation.push({ question : result });
+      userReports[id].sacOrientation.push({ question : result });
 
       conversations[id].orientation += score;
-      userReport.sacOrientationScore += score;
+      userReports[id].sacOrientationScore += score;
       updateSACTotalScore(score, id);
       console.log(`
         Parameter Matched to Orientation Function
@@ -156,7 +158,7 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
         ===> Unary Operator Converted Score : ${score}
         -------------------------------------------------------------------------------------------
         EMAIL REPORT ORIENTATION SCORE ==> ${conversations[id].orientation}
-        USER REPORT ORIENTATION SCORE ==> ${userReport.sacOrientationScore}
+        USER REPORT ORIENTATION SCORE ==> ${userReports[id].sacOrientationScore}
       `);
       showTotalScores(id);
     }
@@ -167,12 +169,12 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
 
     if (!filterQuestions(params, id) && !isNaN(score)) {
       pushQuestion(params, id);
-      userReport.sacMemory.push({ question : answer });
+      userReports[id].sacMemory.push({ question : answer });
 
       updateSACTotalScore(score, id);
       conversations[id].immediateMemory += score;
-      userReport.sacMemoryScore   += score;
-      userReport.sacTotalScore    += score;
+      userReports[id].sacMemoryScore    += score;
+      userReports[id].sacTotalScore     += score;
       console.log(`
         Parameter Matched To Immediate Memory Function
         ====> Question : ${question}
@@ -180,23 +182,23 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
         ====> Score : ${score}
         -------------------------------------------------------------------------------------------
         EMAIL REPORT IMMEDIATE MEMORY SCORE ==> ${conversations[id].immediateMemory}
-        USER REPORT MEMORY SCORE ==> ${userReport.sacMemoryScore}
+        USER REPORT MEMORY SCORE ==> ${userReports[id].sacMemoryScore}
       `);
       showTotalScores(id);
     }
   }
-  if (sacConcentration[params] && answer.includes('original')) {
+  if (sacConcentration[params]) {
     let question = sacConcentration[params];
     let score    = +concentration(params, answer);
 
     if (!filterQuestions(params, id) && !isNaN(score)) {
       pushQuestion(params, id);
-      userReport.sacConcentration.push({ question : answer });
+      userReports[id].sacConcentration.push({ question : answer });
 
       updateSACTotalScore(score, id);
       conversations[id].concentration  += score;
-      userReport.sacConcentrationScore += score;
-      userReport.sacTotalScore         += score;
+      userReports[id].sacConcentrationScore += score;
+      userReports[id].sacTotalScore         += score;
       console.log(`
         Parameter Matched To Concentration Memory Function
         ====> Question : ${question}
@@ -204,7 +206,7 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
         ====> Score    : ${score}
         -------------------------------------------------------------------------------------------
         EMAIL REPORT CONCENTRATION SCORE ==> ${conversations[id].concentration}
-        USER REPORT CONCENTRATION SCORE ==> ${userReport.sacConcentrationScore}
+        USER REPORT CONCENTRATION SCORE ==> ${userReports[id].sacConcentrationScore}
       `);
       showTotalScores(id);
     }
@@ -215,12 +217,12 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
 
     if (!filterQuestions(params, id) && !isNaN(score)) {
       pushQuestion(params, id);
-      userReport.sacDelayedRecall.push({ question : answer });
+      userReports[id].sacDelayedRecall.push({ question : answer });
 
       updateSACTotalScore(score, id);
       conversations[id].delayedRecall += score;
-      userReport.sacDelayedRecallScore += score;
-      userReport.sacTotalScore += score;
+      userReports[id].sacDelayedRecallScore += score;
+      userReports[id].sacTotalScore += score;
       console.log(`
         Parameter Matched To Concentration Memory Function
         ====> Question : ${question}
@@ -228,7 +230,7 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
         ====> Score : ${score}
         -------------------------------------------------------------------------------------------
         EMAIL REPORT DELAYED RECALL SCORE ==> ${conversations[id].delayedRecall}
-        USER REPORT DELAYED RECALL SCORE ==> ${userReport.sacDelayedRecallScore}
+        USER REPORT DELAYED RECALL SCORE ==> ${userReports[id].sacDelayedRecallScore}
       `)
       showTotalScores(id);
     }
@@ -244,28 +246,30 @@ const contextsEvaluation = (message, conversationID) => {
   message.map((elm) => {
     if (elm.parameters) {
       for (val in elm.parameters) {
-        // if (!val.includes('original')) {
-          questionAnswerScore(val, elm.parameters[val], conversationID)
-        // }
+        questionAnswerScore(val, elm.parameters[val], conversationID)
       }
     }
   })
 }
 const sendMessage = (event) => {
   const message              = { id: event.sender.id, message: event.message.text}
-  const senderID             = event.sender.id;
   const userMessage          = event.message.text;
-  userReport.conversationID  = senderID;
-  console.log(`Conversation ID : ${senderID}`);
+  let senderID;
+  if (event.sender.id != 274664636304054) {
+    senderID = event.sender.id;
+  }
+  userReports.conversationID  = senderID;
   if (!conversations[senderID]) {
     conversationInit(senderID);
   }
-
+  if (!userReports[senderID]) {
+    userReportInit(senderID);
+  }
   const apiai = apiaiApp.textRequest(userMessage, {
     sessionId: 'doctor_concussion'
   });
   apiai.on('response', (response) => {
-    if (response.result.contexts && response.result.contexts.length > 0) {
+    if (response.result.contexts && response.result.contexts.length > 0 && senderID) {
       contextsEvaluation(response.result.contexts, senderID);
     }
     let aiText = response.result.fulfillment.speech;
@@ -281,7 +285,6 @@ const sendMessage = (event) => {
       if (error) {
         console.log(`Error sending message: ${error}`);
       } else if (response.body.error && response.body.error.code !== 100) {
-        debugger;
         console.log(`Response Body Errors: ${printData(response.body.error)}`);
         // console.log(`Response Body Error`);
       }
