@@ -1,4 +1,3 @@
-s
 require('dotenv').config();
 
 const PAGE_ACCESS_TOKEN = process.env.FB_PAGE_ACCESS_TOKEN;
@@ -33,6 +32,8 @@ const sendMessage = (event) => {
   let apiai = apiaiApp.textRequest(text, {
     sessionId: 'tabby_cat'
   });
+
+  app.set("view engine", "ejs");
 
   apiai.on('response', (response) => {
     console.log('RESPONSE', response)
@@ -112,6 +113,18 @@ app.post('/webhook', (req, res) => {
   }
 });
 
+app.get("/", (req, res) => {
+  res.render("index");
+})
+
+app.post("/", (req, res) => {
+  if (!req.body) {
+    res.status(400).json({ error: 'Invalid Request: No input in POST body' });
+  return;
+  }
+})
+
+
 app.use((req, res) => res.status(404).send('Error 404. This path does not exist.'));
 
-app.listen(PORT, () => console.log(`Example app listening on port ${PORT}!`));
+app.listen(PORT, () => console.log(`Cerebrum listening on port ${PORT}!`));
