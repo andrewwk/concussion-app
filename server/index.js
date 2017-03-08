@@ -10,6 +10,8 @@ const bodyParser         = require('body-parser');
 const request            = require('request');
 const apiai              = require('apiai');
 const app                = express();
+const MongoClient        = require('mongodb').MongoClient;
+const MONGODB_URI        = process.env.MONGODB_URI;
 const apiaiApp           = apiai(APIAI_TOKEN);
 const orientation        = require('./orientation'); // Functions for Orientation Tests
 const questions          = require('./dictionary'); // Object containing Test Questions
@@ -30,23 +32,9 @@ app.use(bodyParser.json());
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
 // Andrew - Email Report Object. Different from object going into DB.
-const emailReport = {
-  conversationID :  {
-    conversationID       : conversationID,
-    testDate             : new Date(),
-    numberOfSymptoms     : 0, //  Out of 22
-    symptomSeverityScore : 0, // Out of 132
-    orientation          : 0, //  Out of 5
-    immediateMemory      : 0, // Out of 15
-    concentration        : 0, // Out of 5
-    delayedRecall        : 0, // Out of 5
-    sacTotal             : 0, // Sum Scores
-    answeredQuestions    : []
-  }
-}
-
+// Andrew - Object that holds all conversations/conversation objects
 const conversations = {};
-
+// Andrew - Function to create new conversation object.
 const conversationInit = (id) => {
   conversations[id] =
     {
@@ -63,26 +51,24 @@ const conversationInit = (id) => {
     }
 }
 
-const answeredQuestions = [];
-
-const filterQuestions = (question) => {
-  return answeredQuestions.includes(question)
+const filterQuestions = (question, id) => {
+  return conversations[id].answeredQuestions.includes(question)
 }
-const pushQuestion = (question) => {
-  if (!filterQuestions(question)) {
-    answeredQuestions.push(question)
+const pushQuestion = (question, id) => {
+  if (!filterQuestions(question, id)) {
+    conversations[id].answeredQuestions.push(question)
   }
 }
-const updateSACTotalScore = (score) => {
+const updateSACTotalScore = (score, id) => {
   if (score > 0) {
-    emailReport.sacTotal += score;
+    conversations[id].sacTotal += score;
     userReport.sacTotalScore += score;
   }
 }
-const updateHYDFScores = (score) => {
+const updateHYDFScores = (score, id) => {
   if (score > 0 && score.constructor === Number) {
-    emailReport.numberOfSymptoms += 1
-    emailReport.symptomSeverityScore += score
+    conversations[id].numberOfSymptoms += 1
+    conversations[id].symptomSeverityScore += score
   }
 }
 const printQandA = (question, answer) => {
@@ -92,15 +78,15 @@ const printQandA = (question, answer) => {
     `);
 };
 
-const showTotalScores = () => {
+const showTotalScores = (id) => {
   console.log(`
-    SAC TOTAL SCORE EMAIL : ${emailReport.sacTotal}
+    SAC TOTAL SCORE EMAIL : ${conversations[id].sacTotal}
     SAC TOTAL SCORE REPORT : ${userReport.sacTotalScore}
     `);
 };
 
 const verifyID = (id) => {
-  return emailReport.conversationID == id;
+  return conversations[id] == id;
 }
 
 const clearQuestionsArray = () => {
@@ -129,54 +115,46 @@ const clearQuestionsArray = () => {
 // Andrew - Function to parse user response and parameters. Then matches them to certain portions
 // of the test.
 const questionAnswerScore = (params, userResponse, conversationID) => {
-  let answer = userResponse
+  let answer = userResponse;
+  let id     = conversationID;
 
-  if (params == 'testInitialize') {
-    clearQuestionsArray();
-  }
-  if (!filterQuestions(params)) {
-    pushQuestion(params);
+  // if (params == 'testInitialize') {
+  //   clearQuestionsArray();
+  // }
+  // if (!filterQuestions(params, id)) {
+  //   pushQuestion(params, id);
+    //
+    // if (psocYes[params]) {
+    //   let question = psocYes[params];
+    //   printQandA(question, answer)
+    //   userReport.potentialSignsOfConcussion.push({ question : answer })
+    // }
+    // if (psocNo[params]) {
+    //   let question = psocNo[params];
+    //   printQandA(question, answer)
+    //   userReport.potentialSignsOfConcussion.push({ question : answer })
+    // }
+  // }
 
-    if (psocYes[params]) {
-      let question = psocYes[params];
-      printQandA(question, answer)
-      userReport.potentialSignsOfConcussion.push({ question : answer })
-    }
-    if (psocNo[params]) {
-      let question = psocNo[params];
-      printQandA(question, answer)
-      userReport.potentialSignsOfConcussion.push({ question : answer })
-    }
-  }
-
-  if (hydf[params] && verifyID(conversationID)) {
+  if (hydf[params]) {
     let question = hydf[params];
     let score    = parseInt(answer);
-    console.log(`
-      Parameters : ${params}
-      Question : ${question}
-      Score : ${score} ${isNaN(score)}
-      Array : ${answeredQuestions}
-      Function : ${filterQuestions(params)}
-      `);
-    if (!filterQuestions(params) && !isNaN(score)) {
-      console.log(question);
-      console.log(score);
-      pushQuestion(params);
+    if (!filterQuestions(params, id) && !isNaN(score)) {
+      pushQuestion(params, id);
       userReport.howDoYouFeel.push({ question : answer });
-      updateHYDFScores(score);
-      updateSACTotalScore(score);
+      updateHYDFScores(score, id);
+      updateSACTotalScore(score, id);
       console.log(`HYDF Matched
         ===> Question                       : ${question}
         ===> Answer                         : ${answer}
         ===> Score                          : ${score}
         -------------------------------------------------------------------------------------------
-        EMAIL REPORT NUMBER OF SYMPTOMS ==> ${emailReport.numberOfSymptoms}
-        EMAIL REPORT SYMPTOM SEVERITY SCORE ==> ${emailReport.symptomSeverityScore}
+        EMAIL REPORT NUMBER OF SYMPTOMS ==> ${conversations[id].numberOfSymptoms}
+        EMAIL REPORT SYMPTOM SEVERITY SCORE ==> ${conversations[id].symptomSeverityScore}
       `);
-      showTotalScores();
-    } else if (!filterQuestions(params) && isNaN(score)) {
-      pushQuestion(params);
+      showTotalScores(id);
+    } else if (!filterQuestions(params, id) && isNaN(score)) {
+      pushQuestion(params, id);
       userReport.howDoYouFeel.push({ question : answer });
     }
   }
@@ -186,35 +164,35 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
     let result = orientationFunction(answer);
     let score = +result;
 
-    if (!filterQuestions(params) && !isNaN(score)) {
-      pushQuestion(params);
+    if (!filterQuestions(params, id) && !isNaN(score)) {
+      pushQuestion(params, id);
       userReport.sacOrientation.push({ question : result });
 
-      emailReport.orientation        += score;
+      conversations[id].orientation += score;
       userReport.sacOrientationScore += score;
-      updateSACTotalScore(score);
+      updateSACTotalScore(score, id);
       console.log(`
         Parameter Matched to Orientation Function
         ===> Question                       : ${question}
         ===> Answer                         : ${answer}
         ===> Unary Operator Converted Score : ${score}
         -------------------------------------------------------------------------------------------
-        EMAIL REPORT ORIENTATION SCORE ==> ${emailReport.orientation}
+        EMAIL REPORT ORIENTATION SCORE ==> ${conversations[id].orientation}
         USER REPORT ORIENTATION SCORE ==> ${userReport.sacOrientationScore}
       `);
-      showTotalScores();
+      showTotalScores(id);
     }
   }
   if (sacImmediateMemory[params]) {
     let question = sacImmediateMemory[params];
     let score = memoryRecall(answer);
 
-    if (!filterQuestions(params) && !isNaN(score)) {
-      pushQuestion(params);
+    if (!filterQuestions(params, id) && !isNaN(score)) {
+      pushQuestion(params, id);
       userReport.sacMemory.push({ question : answer });
 
-      updateSACTotalScore(score);
-      emailReport.immediateMemory += score;
+      updateSACTotalScore(score, id);
+      conversations[id].immediateMemory += score;
       userReport.sacMemoryScore   += score;
       userReport.sacTotalScore    += score;
       console.log(`
@@ -223,46 +201,46 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
         ====> Answer : ${answer}
         ====> Score : ${score}
         -------------------------------------------------------------------------------------------
-        EMAIL REPORT IMMEDIATE MEMORY SCORE ==> ${emailReport.immediateMemory}
+        EMAIL REPORT IMMEDIATE MEMORY SCORE ==> ${conversations[id].immediateMemory}
         USER REPORT MEMORY SCORE ==> ${userReport.sacMemoryScore}
       `);
-      showTotalScores();
+      showTotalScores(id);
     }
   }
-  if (sacConcentration[params]) {
+  if (sacConcentration[params] && answer.includes('original')) {
     let question = sacConcentration[params];
     let score    = +concentration(params, answer);
 
-    if (!filterQuestions(params) && !isNaN(score)) {
-      pushQuestion(params);
+    if (!filterQuestions(params, id) && !isNaN(score)) {
+      pushQuestion(params, id);
       userReport.sacConcentration.push({ question : answer });
 
-      updateSACTotalScore(score);
-      emailReport.concentration        += score;
+      updateSACTotalScore(score, id);
+      conversations[id].concentration  += score;
       userReport.sacConcentrationScore += score;
       userReport.sacTotalScore         += score;
       console.log(`
         Parameter Matched To Concentration Memory Function
         ====> Question : ${question}
-        ====> Answer : ${answer}
-        ====> Score : ${score}
+        ====> Answer   : ${answer}
+        ====> Score    : ${score}
         -------------------------------------------------------------------------------------------
-        EMAIL REPORT CONCENTRATION SCORE ==> ${emailReport.concentration}
+        EMAIL REPORT CONCENTRATION SCORE ==> ${conversations[id].concentration}
         USER REPORT CONCENTRATION SCORE ==> ${userReport.sacConcentrationScore}
       `);
-      showTotalScores();
+      showTotalScores(id);
     }
   }
   if (sacDelayedRecall[params]) {
     let question = sacDelayedRecall[params];
     let score = memoryRecall(answer);
 
-    if (!filterQuestions(params) && !isNaN(score)) {
-      pushQuestion(params);
+    if (!filterQuestions(params, id) && !isNaN(score)) {
+      pushQuestion(params, id);
       userReport.sacDelayedRecall.push({ question : answer });
 
-      updateSACTotalScore(score);
-      emailReport.delayedRecall += score;
+      updateSACTotalScore(score, id);
+      conversations[id].delayedRecall += score;
       userReport.sacDelayedRecallScore += score;
       userReport.sacTotalScore += score;
       console.log(`
@@ -271,10 +249,10 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
         ====> Answer : ${answer}
         ====> Score : ${score}
         -------------------------------------------------------------------------------------------
-        EMAIL REPORT DELAYED RECALL SCORE ==> ${emailReport.delayedRecall}
+        EMAIL REPORT DELAYED RECALL SCORE ==> ${conversations[id].delayedRecall}
         USER REPORT DELAYED RECALL SCORE ==> ${userReport.sacDelayedRecallScore}
       `)
-      showTotalScores();
+      showTotalScores(id);
     }
   }
   // if (params == 'userEmailOptIn') {
@@ -288,9 +266,10 @@ const contextsEvaluation = (message, conversationID) => {
   message.map((elm) => {
     if (elm.parameters) {
       for (val in elm.parameters) {
-        if (!val.includes('original')) {
+        // if (!val.includes('original')) {
+        debugger;
           questionAnswerScore(val, elm.parameters[val], conversationID)
-        }
+        // }
       }
     }
   })
@@ -300,9 +279,9 @@ const sendMessage = (event) => {
   const senderID             = event.sender.id;
   const userMessage          = event.message.text;
   userReport.conversationID  = senderID;
-
+  console.log(`Conversation ID : ${senderID}`);
   if (!conversations[senderID]) {
-
+    conversationInit(senderID);
   }
 
   const apiai = apiaiApp.textRequest(userMessage, {
