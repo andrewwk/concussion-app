@@ -85,10 +85,6 @@ const showTotalScores = (id) => {
     `);
 };
 
-const verifyID = (id) => {
-  return conversations[id] == id;
-}
-
 const clearQuestionsArray = () => {
   answeredQuestions.length = 0;
   console.log(`Array Cleared : Length = ${answeredQuestions.length}`);
@@ -117,24 +113,6 @@ const clearQuestionsArray = () => {
 const questionAnswerScore = (params, userResponse, conversationID) => {
   let answer = userResponse;
   let id     = conversationID;
-
-  // if (params == 'testInitialize') {
-  //   clearQuestionsArray();
-  // }
-  // if (!filterQuestions(params, id)) {
-  //   pushQuestion(params, id);
-    //
-    // if (psocYes[params]) {
-    //   let question = psocYes[params];
-    //   printQandA(question, answer)
-    //   userReport.potentialSignsOfConcussion.push({ question : answer })
-    // }
-    // if (psocNo[params]) {
-    //   let question = psocNo[params];
-    //   printQandA(question, answer)
-    //   userReport.potentialSignsOfConcussion.push({ question : answer })
-    // }
-  // }
 
   if (hydf[params]) {
     let question = hydf[params];
@@ -267,7 +245,6 @@ const contextsEvaluation = (message, conversationID) => {
     if (elm.parameters) {
       for (val in elm.parameters) {
         // if (!val.includes('original')) {
-        debugger;
           questionAnswerScore(val, elm.parameters[val], conversationID)
         // }
       }
@@ -303,9 +280,10 @@ const sendMessage = (event) => {
     }, (error, response) => {
       if (error) {
         console.log(`Error sending message: ${error}`);
-      } else if (response.body.error) {
-        // console.log(`Response Body Errors: ${printData(response.body.error)}`);
-        console.log(`Response Body Error`);
+      } else if (response.body.error && response.body.error.code !== 100) {
+        debugger;
+        console.log(`Response Body Errors: ${printData(response.body.error)}`);
+        // console.log(`Response Body Error`);
       }
     });
   });
