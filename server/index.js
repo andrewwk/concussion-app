@@ -1,4 +1,4 @@
-inde``require('dotenv').config();
+require('dotenv').config();
 
 const PAGE_ACCESS_TOKEN = process.env.FB_PAGE_ACCESS_TOKEN;
 const APIAI_TOKEN       = process.env.APIAI_TOKEN;
@@ -45,6 +45,12 @@ const concentration      = require('./concentration');
 app.use(bodyParser.json());
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// app.use(express.static(__dirname + '/public'));
+app.use(express.static("public"));
+
+app.set("view engine", "ejs");
+
 // Andrew - Email Report Object. Different from object going into DB.
 const emailReport = {
   testDate             : new Date(),
@@ -298,6 +304,17 @@ app.post('/webhook', (req, res) => {
     res.status(200).end();
   }
 });
+
+app.get("/home", (req, res) => {
+  res.render("index");
+})
+
+app.post("/home", (req, res) => {
+  if (!req.body) {
+    res.status(400).json({ error: 'Invalid Request: No input in POST body' });
+  return;
+  }
+})
 
 app.use((req, res) => res.status(404).send(`Error 404. This path does not exist.`));
 
