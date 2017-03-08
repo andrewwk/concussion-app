@@ -33,7 +33,6 @@ const concentration      = require('./concentration');
 app.use(bodyParser.json());
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
-// Andrew - Email Report Object. Different from object going into DB.
 // Andrew - Object that holds all conversations/conversation objects
 const conversations = {};
 // Andrew - Function to create new conversation object.
@@ -74,40 +73,6 @@ const updateHYDFScores = (score, id) => {
   }
 }
 
-const mongoDB = () => {
-  MongoClient.connect(MONGODB_URI, (err, db) => {
-    if (err) {
-      console.error(`Failed to connect: ${MONGODB_URI}`);
-      throw err;
-    }
-    console.log('Mongo Connected');
-    this.connection = db;
-  });
-}
-
-const mongoConnect = {
-  connection : '',
-  connect : mongoDB
-}
-// Mongo DB Connection
-// const mongo = ...
-//
-// const fetchDiagnosisById = () => {
-//   return new Promise((resolve, reject) => {
-//     mongo
-//       .collection('assessments')
-//       .find(..., (err, results) => {
-//         if (err) {
-//           return reject(err);
-//         }
-//         resolve(results);
-//       })
-//   })
-// }
-// //
-// fetchDiagnosisById(...)
-//   .then()
-//   .catch();
 // Andrew - Function to parse user response and parameters. Then matches them to certain portions
 // of the test.
 const questionAnswerScore = (params, userResponse, conversationID) => {
