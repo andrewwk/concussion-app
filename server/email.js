@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 const api_key           = process.env.MAILGUN_API_KEY;
-const domain            = process.env.DOMAIN;
+const domain            = process.env.MAILGUN_DOMAIN;
 const dbReport          = require('./user-report');  //User Report Object going into DB.
 const conversations     = dbReport.conversations;
 const conversationInit  = dbReport.conversationInit;
