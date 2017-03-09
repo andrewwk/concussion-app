@@ -292,7 +292,7 @@ const data = (id, email) => {
       								<td class="content-block aligncenter">
       									<table class="results">
       										<tr>
-      											<td> <strong> ${conversations[id].firstname}  ${conversations[id].lastName} <br> Assessment #${id}<!-- Id --> <br> March 3, 2017 <!-- Data --> </strong> </td>
+      											<td> <strong> Dylan Toyne <br> Assessment #${id}<!-- Id --> <br> March 9, 2017 <!-- Data --> </strong> </td>
       										</tr>
       										<tr>
       											<td>
@@ -302,10 +302,10 @@ const data = (id, email) => {
                                     <table class="results-items" cellpadding="0" cellspacing="0">
                                         <tr> Number of Symptoms of 22: ${conversations[id].numberOfSymptoms} </tr> <br>
                                         <tr> Symptom Severity Score of 132: ${conversations[id].symptomSeverityScore} </tr> <br>
-                                        <tr> Orientation of 5: ${conversations[id].orientation} </tr> <br>
-                                        <tr> Immediate Memory of 15: ${conversations[id].immediateMemory} </tr> <br>
-                                        <tr> Concentration of 5: ${conversations[id].concentration} </tr> <br>
-                                        <tr> Delayed Recall of 5: ${conversations[id].delayedRecall} </tr> <br> <br>
+                                        <tr> Orientation Score of 5: ${conversations[id].orientation} </tr> <br>
+                                        <tr> Immediate Memory Score of 15: ${conversations[id].immediateMemory} </tr> <br>
+                                        <tr> Concentration Score of 5: ${conversations[id].concentration} </tr> <br>
+                                        <tr> Delayed Recall Score of 5: ${conversations[id].delayedRecall} </tr> <br> <br>
                                         <tr> <strong> SAC Total: ${conversations[id].sacTotal} </tr> <br> <br> <br>
                                     </table>
                                   </td>
