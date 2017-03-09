@@ -312,13 +312,13 @@ const data = {
   													'<tr>' +
   														'<td class="alignright"> <strong> Scoring Summary:</td>' +
                                 '<table class="results-items" cellpadding="0" cellspacing="0">' +
-                                    '<tr> Number of Symptoms of 22:' ${userReport.numberOfSymptoms} '</tr> <br>' +
-                                    '<tr> Symptom Severity Score of 132:' ${userReport.symptomSeverityScore} '</tr> <br>' +
-                                    '<tr> Orientation of 5:' ${userReport.sacOrientationScore} '</tr> <br>' +
-                                    '<tr> Immediate Memory of 15:' ${userReport.sacMemoryScore} '</tr> <br>' +
-                                    '<tr> Concentration of 5:' ${userReport.sacConcentrationScore} '</tr> <br>' +
-                                    '<tr> Delayed Recall of 5:' ${userReport.sacDelayedRecallScore} '</tr> <br> <br>' +
-                                    '<tr> <strong> SAC Total:' ${userReport.sacTotalScore} '</tr> <br> <br> <br>' +
+                                    '<tr> Number of Symptoms of 22:' '${userReport.numberOfSymptoms}' '</tr> <br>' +
+                                    '<tr> Symptom Severity Score of 132:' '${userReport.symptomSeverityScore}' '</tr> <br>' +
+                                    '<tr> Orientation of 5:' '${userReport.sacOrientationScore}' '</tr> <br>' +
+                                    '<tr> Immediate Memory of 15:' '${userReport.sacMemoryScore}' '</tr> <br>' +
+                                    '<tr> Concentration of 5:' '${userReport.sacConcentrationScore}' '</tr> <br>' +
+                                    '<tr> Delayed Recall of 5:' '${userReport.sacDelayedRecallScore}' '</tr> <br> <br>' +
+                                    '<tr> <strong> SAC Total:' '${userReport.sacTotalScore}' '</tr> <br> <br> <br>' +
                                 '</table>' +
                               '</td>' +
   													'</tr>' +
