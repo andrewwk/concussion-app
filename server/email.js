@@ -292,13 +292,13 @@ const data = (id, email) => {
       								<td class="content-block aligncenter">
       									<table class="results">
       										<tr>
-      											<td> <strong> ${conversations[id].firstname}  ${conversations[id].lastName} <br> Assessment #12345<!-- Id --> <br> March 3, 2017 <!-- Data --> </strong> </td>
+      											<td> <strong> ${conversations[id].firstname}  ${conversations[id].lastName} <br> Assessment #${id}<!-- Id --> <br> March 3, 2017 <!-- Data --> </strong> </td>
       										</tr>
       										<tr>
       											<td>
       												<table class="results-items" cellpadding="0" cellspacing="0">
       													<tr>
-      														<td class="alignright"> <strong> Scoring Summary:</td>
+      														<td class="aligncenter"> <strong> Scoring Summary:</td>
                                     <table class="results-items" cellpadding="0" cellspacing="0">
                                         <tr> Number of Symptoms of 22: ${conversations[id].numberOfSymptoms} </tr> <br>
                                         <tr> Symptom Severity Score of 132: ${conversations[id].symptomSeverityScore} </tr> <br>
@@ -319,7 +319,7 @@ const data = (id, email) => {
       									</table>
                         <table width="100%">
                 					<tr>
-                						<td class="aligncenter content-block"> <strong> Questions?<br> <br> <a href="mailto:"> concussionapp@example.com</a> </strong> </td>
+                						<td class="aligncenter content-block"> <strong> Questions?<br> <br> <a href="mailto:"> concussionassessmentapp@gmail.com </a> </strong> </td>
                 					</tr>
                 				</table>
       								</td>
