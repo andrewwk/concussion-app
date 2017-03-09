@@ -219,6 +219,11 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
       User Email : ${answer}
       `);
     sendMail(id, answer)
+    knex('assessments')
+      .insert({conversation_id: id, assessment: conversations[id]})
+      .then((result) => {
+        console.log(`Successful Insertion Into DB. Result: ${result}`);
+      })
   }
 
 }
