@@ -1,13 +1,12 @@
 require('dotenv').config();
 
-<<<<<<< HEAD
 const PAGE_ACCESS_TOKEN  = process.env.FB_PAGE_ACCESS_TOKEN;
 const APIAI_TOKEN        = process.env.APIAI_TOKEN;
 const APP_VERIFY_TOKEN   = process.env.APP_VERIFY_TOKEN;
 const ENV                = process.env.ENV  || 'development';
 const PORT               = process.env.PORT || 8080;
-const api_key           = process.env.MAILGUN_API_KEY;
-const domain            = process.env.DOMAIN;
+const api_key            = process.env.MAILGUN_API_KEY;
+const domain             = process.env.DOMAIN;
 const express            = require('express');
 const bodyParser         = require('body-parser');
 const request            = require('request');
@@ -16,7 +15,6 @@ const app                = express();
 const MongoClient        = require('mongodb').MongoClient;
 const MONGODB_URI        = process.env.MONGODB_URI;
 const apiaiApp           = apiai(APIAI_TOKEN);
-const request            = require('request');
 const mailgun            = require('mailgun-js')({apiKey: api_key, domain: domain});
 const orientation        = require('./orientation'); // Functions for Orientation Tests
 const questions          = require('./dictionary'); // Object containing Test Questions
@@ -32,48 +30,26 @@ const printData          = require('./print-data'); // Function to print data ob
 const dbReport           = require('./user-report');  //User Report Object going into DB.
 const userReports        = dbReport.userReports;
 const userReportInit     = dbReport.userReportInit;
+const conversations      = dbReport.conversations;
+const conversationInit   = dbReport.conversationInit;
 const concentration      = require('./concentration');
+const sendMail           = require('./email');
 
 // parse application/json
 app.use(bodyParser.json());
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
-// Andrew - Object that holds all conversations/conversation objects
-const conversations = {};
-// Andrew - Function to create new conversation object.
-const conversationInit = (id) => {
-  conversations[id] =
-    {
-      conversationID       : id,
-      testDate             : new Date(),
-      numberOfSymptoms     : 0, //  Out of 22
-      symptomSeverityScore : 0, // Out of 132
-      orientation          : 0, //  Out of 5
-      immediateMemory      : 0, // Out of 15
-      concentration        : 0, // Out of 5
-      delayedRecall        : 0, // Out of 5
-      sacTotal             : 0, // Sum Scores
-      answeredQuestions    : []
-    }
-=======
-
 // app.use(express.static(__dirname + '/public'));
 app.use(express.static("public"));
 
 app.set("view engine", "ejs");
 
-// Andrew - Email Report Object. Different from object going into DB.
-const emailReport = {
-  testDate             : new Date(),
-  numberOfSymptoms     : 0, //  Out of 22
-  symptomSeverityScore : 0, // Out of 132
-  orientation          : 0, //  Out of 5
-  immediateMemory      : 0, // Out of 15
-  concentration        : 0, // Out of 5
-  delayedRecall        : 0, // Out of 5
-  sacTotal             : 0 // Sum Scores
->>>>>>> origin/feature/integration
-}
+const showTotalScores = (id) => {
+  console.log(`
+    SAC TOTAL SCORE EMAIL : ${conversations[id].sacTotal}
+    SAC TOTAL SCORE REPORT : ${userReports[id].sacTotalScore}
+    `);
+};
 
 const filterQuestions = (question, id) => {
   return conversations[id].answeredQuestions.includes(question)
@@ -158,7 +134,7 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
       userReports[id].sacConcentration.push({ question : answer });
 
       updateSACTotalScore(score, id);
-      conversations[id].concentration  += score;
+      conversations[id].concentration       += score;
       userReports[id].sacConcentrationScore += score;
       userReports[id].sacTotalScore         += score;
       showTotalScores(id);
@@ -174,17 +150,19 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
       userReports[id].sacDelayedRecall.push({ question : answer });
 
       updateSACTotalScore(score, id);
-      conversations[id].delayedRecall += score;
+      conversations[id].delayedRecall       += score;
       userReports[id].sacDelayedRecallScore += score;
-      userReports[id].sacTotalScore += score;
+      userReports[id].sacTotalScore         += score;
       showTotalScores(id);
     }
   }
-  // if (params == 'userEmailOptIn') {
-    // push user email to user report object
-    // trigger email function call
-    // insert either one or both reports into db
-  // }
+  if (params == 'userEmailOptIn') {
+    conversations[id].userEmail = answer;
+    console.log(`
+      User Email : ${answer}
+      `);
+    sendMail(id, answer)
+  }
 
 }
 const contextsEvaluation = (message, conversationID) => {
@@ -197,45 +175,36 @@ const contextsEvaluation = (message, conversationID) => {
   })
 }
 const sendMessage = (event) => {
-  const message              = { id: event.sender.id, message: event.message.text}
-  const userMessage          = event.message.text;
+  const message     = { id: event.sender.id, message: event.message.text}
+  const userMessage = event.message.text;
   let senderID;
+
   if (event.sender.id != 274664636304054) {
     senderID = event.sender.id;
   }
+
   userReports.conversationID  = senderID;
+
   if (!conversations[senderID]) {
     conversationInit(senderID);
   }
+
   if (!userReports[senderID]) {
     userReportInit(senderID);
   }
+
   const apiai = apiaiApp.textRequest(userMessage, {
     sessionId: 'doctor_concussion'
   });
+
   apiai.on('response', (response) => {
-<<<<<<< HEAD
+
     if (response.result.contexts && response.result.contexts.length > 0 && senderID) {
       contextsEvaluation(response.result.contexts, senderID);
-=======
-    // console.log(`Response Result =>|| ${printData(response.result)} ||<=`);
-    if (response.result.contexts && response.result.contexts.length > 0) {
-      console.log(`
-        PRINT CONTEXTS FUNCTION ${printContexts(response.result.contexts)}
-        `);
-      if (response.result.contexts.length > 0 && response.result.contexts[0].parameters.validMonth) {
-        const testName     = response.result.contexts[1].name
-        const testQuestion = response.result.contexts[0].parameters
-          const userResponse = response.result.contexts[0].parameters.validMonth.original
-        console.log(`
-          TEST NAME     : ${testName}
-          QUESTION      : ${testQuestion}
-          USER RESPONSE : ${userResponse}
-          `);
-        }
->>>>>>> origin/feature/integration
     }
+
     let aiText = response.result.fulfillment.speech;
+
     request({
       url: 'https://graph.facebook.com/v2.6/me/messages',
       qs: {access_token: PAGE_ACCESS_TOKEN},
@@ -252,14 +221,29 @@ const sendMessage = (event) => {
         // console.log(`Response Body Error`);
       }
     });
+
   });
+
   apiai.on('error', (error) => {
     console.log(`APIAI.ON ERROR ${error}`);
   });
+
   apiai.end();
 };
 
-app.get('/', (req, res) => res.status(200).send(`Application Successfully Running`));
+// app.get('/', (req, res) => res.status(200).send(`Application Successfully Running`));
+
+app.get('/', (req, res) => {
+  res.render('index');
+});
+
+app.post('/', (req, res) => {
+  if (!req.body) {
+    res.status(400).json({ error: 'Invalid Request: No input in POST body' });
+  } else {
+    console.log('Submission Successful');
+  }
+});
 
 /* For Facebook Validation */
 app.get('/webhook', (req, res) => {
@@ -278,6 +262,10 @@ app.post('/webhook', (req, res) => {
     req.body.entry.forEach((entry) => {
       entry.messaging.forEach((event) => {
         if (event.message && event.message.text) {
+          console.log(`
+            Sender           : ${event.sender.id}
+            Server/Me/Us/Bot : ${event.recipient.id}
+          `);
           sendMessage(event);
         }
       });
@@ -286,17 +274,10 @@ app.post('/webhook', (req, res) => {
   }
 });
 
-app.get("/home", (req, res) => {
-  res.render("index");
-})
-
-app.post("/home", (req, res) => {
-  if (!req.body) {
-    res.status(400).json({ error: 'Invalid Request: No input in POST body' });
-  return;
-  }
+app.get('/privacy-policy', (req, res) => {
+  res.render('privacy-policy')
 })
 
 app.use((req, res) => res.status(404).send(`Error 404. This path does not exist.`));
 
-app.listen(PORT, () => console.log(`Example app listening on port ${PORT}! ${mongoConnect.connect}`));
+app.listen(PORT, () => console.log(`Example app listening on port ${PORT}!`));

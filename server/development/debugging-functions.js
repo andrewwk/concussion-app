@@ -11,3 +11,8 @@ const showTotalScores = (id) => {
     SAC TOTAL SCORE REPORT : ${userReports[id].sacTotalScore}
     `);
 };
+
+module.exports = {
+  printQandA      : printQandA,
+  showTotalScores : showTotalScores
+}

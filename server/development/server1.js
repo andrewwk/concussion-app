@@ -1,5 +1,5 @@
 require('dotenv').config();
-
+// Dylan - Server file to test mailgun.
 const PAGE_ACCESS_TOKEN = process.env.FB_PAGE_ACCESS_TOKEN;
 const APIAI_TOKEN       = process.env.APIAI_TOKEN;
 const WEATHER_API_KEY   = process.env.WEATHER_API_KEY
