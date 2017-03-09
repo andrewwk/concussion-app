@@ -6,7 +6,7 @@ const APP_VERIFY_TOKEN   = process.env.APP_VERIFY_TOKEN;
 const ENV                = process.env.ENV  || 'development';
 const PORT               = process.env.PORT || 8080;
 const api_key            = process.env.MAILGUN_API_KEY;
-const domain             = process.env.DOMAIN;
+const domain             = process.env.MAILGUN_DOMAIN;
 const express            = require('express');
 const bodyParser         = require('body-parser');
 const request            = require('request');
@@ -208,7 +208,7 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
       showTotalScores(id);
     }
   }
-  
+
   if (params == 'userEmailOptIn') {
     conversations[id].userEmail = answer;
     console.log(`
