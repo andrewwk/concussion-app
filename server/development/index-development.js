@@ -345,4 +345,4 @@ app.get('/privacy-policy', (req, res) => {
 
 app.use((req, res) => res.status(404).send(`Error 404. This path does not exist.`));
 
-app.listen(PORT, () => console.log(`Cerebrum listening on port ${PORT}!`));
+app.listen(PORT, () => console.log(`Cerebrum listening on port ${PORT}, Development Mode!`));
