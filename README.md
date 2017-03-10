@@ -1,10 +1,24 @@
-# Cerebrum
-### Welcome to Cerebrum, an expert system to assess concussions.
+Welcome to Cerebrum - An Expert System Concussion Assessment App
+===================================================================================================
 
+#### Project Description
+Med-Tech App geared towards helping users who believe they may have sustained a concussion
+receive a probable diagnosis vis-a-vis expert system chatbot administered assessment test.
 
+##### Stack
+- Node.JS
+- Facebook and Facebook Messenger
+- API.AI
+- ngrok *Used for Development*
+- Mailgun
+- Heroku *Deployed Successfully*
+- PostgreSQL * Expected to change to MongoDB
+- Knex
+- HTML5
+- CSS3
+- Bootstrap
 
-
-DISCLAIMER: The information contained herein should NOT be used as a substitute for the advice of an appropriately qualified and licensed physician or other health care provider. The information provided here is for informational purposes only. 
+DISCLAIMER: The information contained herein should NOT be used as a substitute for the advice of an appropriately qualified and licensed physician or other health care provider. The information provided here is for informational purposes only.
 
 ### Set-Up Instructions
 
