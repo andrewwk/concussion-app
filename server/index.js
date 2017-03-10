@@ -54,21 +54,25 @@ const showTotalScores = (id) => {
     SAC TOTAL SCORE REPORT : ${userReports[id].sacTotalScore}
     `);
 };
-
+// Function checks whether a question has already been answered by the user.
 const filterQuestions = (question, id) => {
   return conversations[id].answeredQuestions.includes(question)
 }
+// Function that adds answered questions to an array that tracks if a questions has already been
+// answered.
 const pushQuestion = (question, id) => {
   if (!filterQuestions(question, id)) {
     conversations[id].answeredQuestions.push(question)
   }
 }
+// Function to update the SAC total scores for both userReports and conversations.
 const updateSACTotalScore = (score, id) => {
   if (score > 0) {
     conversations[id].sacTotal += score;
     userReports[id].sacTotalScore += score;
   }
 }
+// Function to update HYDF scores.
 const updateHYDFScores = (score, id) => {
   if (score > 0 && score.constructor === Number) {
     conversations[id].numberOfSymptoms += 1
@@ -76,7 +80,7 @@ const updateHYDFScores = (score, id) => {
   }
 }
 
-// Andrew - Function to parse user response and parameters. Then matches them to certain portions
+// Function to parse user response and parameters. Then matches them to certain portions
 // of the test.
 const questionAnswerScore = (params, userResponse, conversationID) => {
   let answer = userResponse;
@@ -90,14 +94,6 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
       userReports[id].howDoYouFeel.push({ question : answer });
       updateHYDFScores(score, id);
       updateSACTotalScore(score, id);
-      console.log(`HYDF Matched
-        ===> Question                       : ${question}
-        ===> Answer                         : ${answer}
-        ===> Score                          : ${score}
-        -------------------------------------------------------------------------------------------
-        EMAIL REPORT NUMBER OF SYMPTOMS ==> ${conversations[id].numberOfSymptoms}
-        EMAIL REPORT SYMPTOM SEVERITY SCORE ==> ${conversations[id].symptomSeverityScore}
-      `);
       showTotalScores(id);
     } else if (!filterQuestions(params, id) && isNaN(score)) {
       pushQuestion(params, id);
@@ -118,18 +114,6 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
       conversations[id].orientation += score;
       userReports[id].sacOrientationScore += score;
       updateSACTotalScore(score, id);
-
-      console.log(`
-              Parameter Matched to Orientation Function
-              ===> Question                       : ${question}
-              ===> Answer                         : ${answer}
-              ===> Unary Operator Converted Score : ${score}
-              -------------------------------------------------------------------------------------------
-              EMAIL REPORT ORIENTATION SCORE ==> ${conversations[id].orientation}
-              USER REPORT ORIENTATION SCORE ==> ${userReports[id].sacOrientationScore}
-            `);
-
-      showTotalScores(id);
     }
   }
 
@@ -144,18 +128,6 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
       conversations[id].immediateMemory += score;
       userReports[id].sacMemoryScore    += score;
       userReports[id].sacTotalScore     += score;
-
-      console.log(`
-        Parameter Matched To Immediate Memory Function
-        ====> Question : ${question}
-        ====> Answer : ${answer}
-        ====> Score : ${score}
-        -------------------------------------------------------------------------------------------
-        EMAIL REPORT IMMEDIATE MEMORY SCORE ==> ${conversations[id].immediateMemory}
-        USER REPORT MEMORY SCORE ==> ${userReports[id].sacMemoryScore}
-      `);
-
-      showTotalScores(id);
     }
   }
 
@@ -171,18 +143,6 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
       conversations[id].concentration       += score;
       userReports[id].sacConcentrationScore += score;
       userReports[id].sacTotalScore         += score;
-
-      console.log(`
-        Parameter Matched To Concentration Memory Function
-        ====> Question : ${question}
-        ====> Answer   : ${answer}
-        ====> Score    : ${score}
-        -------------------------------------------------------------------------------------------
-        EMAIL REPORT CONCENTRATION SCORE ==> ${conversations[id].concentration}
-        USER REPORT CONCENTRATION SCORE ==> ${userReports[id].sacConcentrationScore}
-      `);
-
-      showTotalScores(id);
     }
   }
 
@@ -198,18 +158,6 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
       conversations[id].delayedRecall       += score;
       userReports[id].sacDelayedRecallScore += score;
       userReports[id].sacTotalScore         += score;
-
-      console.log(`
-        Parameter Matched To Concentration Memory Function
-        ====> Question : ${question}
-        ====> Answer : ${answer}
-        ====> Score : ${score}
-        -------------------------------------------------------------------------------------------
-        EMAIL REPORT DELAYED RECALL SCORE ==> ${conversations[id].delayedRecall}
-        USER REPORT DELAYED RECALL SCORE ==> ${userReports[id].sacDelayedRecallScore}
-      `)
-
-      showTotalScores(id);
     }
   }
 
@@ -338,7 +286,7 @@ app.post('/webhook', (req, res) => {
     res.status(200).end();
   }
 });
-
+// Privacy Policy URL required for Facebook app approval
 app.get('/privacy-policy', (req, res) => {
   res.render('privacy-policy')
 })

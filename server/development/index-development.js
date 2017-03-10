@@ -13,15 +13,15 @@ const request            = require('request');
 const apiai              = require('apiai');
 const app                = express();
 const logger             = require('morgan');
-const knexConfig         = require('../knexfile');
+const knexConfig         = require('../../knexfile');
 const knexLogger         = require('knex-logger');
 const knex               = require('knex')(knexConfig[ENV]);
 const MongoClient        = require('mongodb').MongoClient;
 const MONGODB_URI        = process.env.MONGODB_URI;
 const apiaiApp           = apiai(APIAI_TOKEN);
 const mailgun            = require('mailgun-js')({apiKey: api_key, domain: domain});
-const orientation        = require('./orientation'); // Functions for Orientation Tests
-const questions          = require('./dictionary'); // Object containing Test Questions
+const orientation        = require('../orientation'); // Functions for Orientation Tests
+const questions          = require('../dictionary'); // Object containing Test Questions
 const hydf               = questions.hydf;
 const psocYes            = questions.psocYes;
 const psocNo             = questions.psocNo;
@@ -29,15 +29,16 @@ const sacOrientation     = questions.sacOrientation;
 const sacImmediateMemory = questions.sacImmediateMemory;
 const sacConcentration   = questions.sacConcentration;
 const sacDelayedRecall   = questions.sacDelayedRecall;
-const memoryRecall       = require('./memory-recall'); // Function to match string for recall tests
-const printData          = require('./print-data'); // Function to print data objects
-const dbReport           = require('./user-report');  //User Report Object going into DB.
+const memoryRecall       = require('../memory-recall'); // Function to match string for recall tests
+const printData          = require('../print-data'); // Function to print data objects
+const dbReport           = require('../user-report');  //User Report Object going into DB.
 const userReports        = dbReport.userReports;
 const userReportInit     = dbReport.userReportInit;
 const conversations      = dbReport.conversations;
 const conversationInit   = dbReport.conversationInit;
-const concentration      = require('./concentration');
-const sendMail           = require('./email');
+const concentration      = require('../concentration');
+const sendMail           = require('../email');
+const showScore          = require('../show-scores');
 
 // parse application/json
 app.use(bodyParser.json());
@@ -47,13 +48,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 app.set("view engine", "ejs");
-
-const showTotalScores = (id) => {
-  console.log(`
-    SAC TOTAL SCORE EMAIL : ${conversations[id].sacTotal}
-    SAC TOTAL SCORE REPORT : ${userReports[id].sacTotalScore}
-    `);
-};
 
 const filterQuestions = (question, id) => {
   return conversations[id].answeredQuestions.includes(question)
@@ -73,6 +67,8 @@ const updateHYDFScores = (score, id) => {
   if (score > 0 && score.constructor === Number) {
     conversations[id].numberOfSymptoms += 1
     conversations[id].symptomSeverityScore += score
+    userReports[id].numberOfSymptoms += 1
+    userReports[id].symptomSeverityScore += score
   }
 }
 
@@ -90,15 +86,7 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
       userReports[id].howDoYouFeel.push({ question : answer });
       updateHYDFScores(score, id);
       updateSACTotalScore(score, id);
-      console.log(`HYDF Matched
-        ===> Question                       : ${question}
-        ===> Answer                         : ${answer}
-        ===> Score                          : ${score}
-        -------------------------------------------------------------------------------------------
-        EMAIL REPORT NUMBER OF SYMPTOMS ==> ${conversations[id].numberOfSymptoms}
-        EMAIL REPORT SYMPTOM SEVERITY SCORE ==> ${conversations[id].symptomSeverityScore}
-      `);
-      showTotalScores(id);
+      showScores(id, question, answer, score)
     } else if (!filterQuestions(params, id) && isNaN(score)) {
       pushQuestion(params, id);
       userReports[id].howDoYouFeel.push({ question : answer });
@@ -118,18 +106,7 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
       conversations[id].orientation += score;
       userReports[id].sacOrientationScore += score;
       updateSACTotalScore(score, id);
-
-      console.log(`
-              Parameter Matched to Orientation Function
-              ===> Question                       : ${question}
-              ===> Answer                         : ${answer}
-              ===> Unary Operator Converted Score : ${score}
-              -------------------------------------------------------------------------------------------
-              EMAIL REPORT ORIENTATION SCORE ==> ${conversations[id].orientation}
-              USER REPORT ORIENTATION SCORE ==> ${userReports[id].sacOrientationScore}
-            `);
-
-      showTotalScores(id);
+      showScores(id, question, answer, score)
     }
   }
 
@@ -144,18 +121,7 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
       conversations[id].immediateMemory += score;
       userReports[id].sacMemoryScore    += score;
       userReports[id].sacTotalScore     += score;
-
-      console.log(`
-        Parameter Matched To Immediate Memory Function
-        ====> Question : ${question}
-        ====> Answer : ${answer}
-        ====> Score : ${score}
-        -------------------------------------------------------------------------------------------
-        EMAIL REPORT IMMEDIATE MEMORY SCORE ==> ${conversations[id].immediateMemory}
-        USER REPORT MEMORY SCORE ==> ${userReports[id].sacMemoryScore}
-      `);
-
-      showTotalScores(id);
+      showScores(id, question, answer, score)
     }
   }
 
@@ -171,18 +137,7 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
       conversations[id].concentration       += score;
       userReports[id].sacConcentrationScore += score;
       userReports[id].sacTotalScore         += score;
-
-      console.log(`
-        Parameter Matched To Concentration Memory Function
-        ====> Question : ${question}
-        ====> Answer   : ${answer}
-        ====> Score    : ${score}
-        -------------------------------------------------------------------------------------------
-        EMAIL REPORT CONCENTRATION SCORE ==> ${conversations[id].concentration}
-        USER REPORT CONCENTRATION SCORE ==> ${userReports[id].sacConcentrationScore}
-      `);
-
-      showTotalScores(id);
+      showScores(id, question, answer, score)
     }
   }
 
@@ -198,18 +153,7 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
       conversations[id].delayedRecall       += score;
       userReports[id].sacDelayedRecallScore += score;
       userReports[id].sacTotalScore         += score;
-
-      console.log(`
-        Parameter Matched To Concentration Memory Function
-        ====> Question : ${question}
-        ====> Answer : ${answer}
-        ====> Score : ${score}
-        -------------------------------------------------------------------------------------------
-        EMAIL REPORT DELAYED RECALL SCORE ==> ${conversations[id].delayedRecall}
-        USER REPORT DELAYED RECALL SCORE ==> ${userReports[id].sacDelayedRecallScore}
-      `)
-
-      showTotalScores(id);
+      showScores(id, question, answer, score)
     }
   }
 
