@@ -48,12 +48,6 @@ app.use(express.static("public"));
 
 app.set("view engine", "ejs");
 
-const showTotalScores = (id) => {
-  console.log(`
-    SAC TOTAL SCORE EMAIL : ${conversations[id].sacTotal}
-    SAC TOTAL SCORE REPORT : ${userReports[id].sacTotalScore}
-    `);
-};
 // Function checks whether a question has already been answered by the user.
 const filterQuestions = (question, id) => {
   return conversations[id].answeredQuestions.includes(question)
@@ -166,14 +160,20 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
     console.log(`
       User Email : ${answer}
       `);
-      knex('assessments')
-      .insert({
-        conversation_id: id,
-        assessment: conversations[id]
-      })
-      .then((result) => {
-        console.log(`Successful Insertion Into DB. Result: ${result}`);
-      })
+      // knex('assessments')
+      // .insert({
+      //   conversation_id: id,
+      //   assessment: conversations[id]
+      // })
+      // .then((result) => {
+      //   console.log(`Successful Insertion Into DB. Result: ${result}`);
+      // })
+    db.collection('assesssments').insert(conversations[id] (err, result) => {
+      if (err) {
+        console.log(`There was an error during MongoDB insertion : ${err}`);
+      }
+    console.log(`Assessment saved successfully`);
+    })
     sendMail(id, answer)
   }
 
@@ -244,53 +244,60 @@ const sendMessage = (event) => {
   apiai.end();
 };
 
-// app.get('/', (req, res) => res.status(200).send(`Application Successfully Running`));
-
-app.get('/', (req, res) => {
-  res.render('index');
-});
-
-app.post('/', (req, res) => {
-  if (!req.body) {
-    res.status(400).json({ error: 'Invalid Request: No input in POST body' });
-  } else {
-    console.log('Submission Successful');
+MongoClient.connect(MONGODB_URI, (err, db) => {
+  if (err) {
+    console.error(`Failed to connect: ${MONGODB_URI}`);
+    throw err;
   }
-});
 
-/* For Facebook Validation */
-app.get('/webhook', (req, res) => {
-  console.log(`Facebook Validation - Request Query: ${req.query}`);
-  if (req.query['hub.mode'] && req.query['hub.verify_token'] === APP_VERIFY_TOKEN) {
-    console.log(`Facebook Web Hook Validation Succeeded`);
-    return res.status(200).send(req.query['hub.challenge']);
-  }
-  // otherwise, not authorized
-  return res.status(403).end();
-});
+  app.get('/', (req, res) => {
+    res.render('index');
+  });
 
-/* Handling all messenges */
-app.post('/webhook', (req, res) => {
-  if (req.body.object === 'page') {
-    req.body.entry.forEach((entry) => {
-      entry.messaging.forEach((event) => {
-        if (event.message && event.message.text) {
-          console.log(`
-            Sender           : ${event.sender.id}
-            Server/Me/Us/Bot : ${event.recipient.id}
-          `);
-          sendMessage(event);
-        }
-      });
+  app.post('/', (req, res) => {
+    if (!req.body) {
+      res.status(400).json({ error: 'Invalid Request: No input in POST body' });
+    } else {
+      console.log('Submission Successful');
+    }
+  });
+
+  /* For Facebook Validation */
+  app.get('/webhook', (req, res) => {
+    console.log(`Facebook Validation - Request Query: ${req.query}`);
+    if (req.query['hub.mode'] && req.query['hub.verify_token'] === APP_VERIFY_TOKEN) {
+      console.log(`Facebook Web Hook Validation Succeeded`);
+      return res.status(200).send(req.query['hub.challenge']);
+    }
+    // otherwise, not authorized
+    return res.status(403).end();
+  });
+
+  /* Handling all messenges */
+  app.post('/webhook', (req, res) => {
+    if (req.body.object === 'page') {
+      req.body.entry.forEach((entry) => {
+        entry.messaging.forEach((event) => {
+          if (event.message && event.message.text) {
+            console.log(`
+              Sender           : ${event.sender.id}
+              Server/Me/Us/Bot : ${event.recipient.id}
+              `);
+              sendMessage(event);
+            }
+          });
+        });
+        res.status(200).end();
+      }
     });
-    res.status(200).end();
-  }
-});
-// Privacy Policy URL required for Facebook app approval
-app.get('/privacy-policy', (req, res) => {
-  res.render('privacy-policy')
-})
+    // Privacy Policy URL required for Facebook app approval
+    app.get('/privacy-policy', (req, res) => {
+      res.render('privacy-policy')
+    })
 
-app.use((req, res) => res.status(404).send(`Error 404. This path does not exist.`));
+    app.use((req, res) => res.status(404).send(`Error 404. This path does not exist.`));
+});
+
+
 
 app.listen(PORT, () => console.log(`Cerebrum listening on port ${PORT}!`));
