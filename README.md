@@ -3,8 +3,9 @@ Welcome to Cerebrum - An Expert System Concussion Assessment App
 
 #### Project Description
 Med-Tech App geared towards helping users who believe they may have sustained a concussion
-receive a probable diagnosis vis-a-vis expert system chatbot administered assessment test. The test
-is a condensed version of the SCAT-3 (Sport Concussion Assessment Tool - 3rd Edition) Test.
+receive a probable diagnosis vis-a-vis expert system chatbot administered assessment test. Based on
+the SCAT-3 (Sport Concussion Assessment Tool - 3rd Edition) Test, a condensed version of the test is
+administered by Cerebrum through a series of questions.
 
 ##### Stack
 - Node.JS
