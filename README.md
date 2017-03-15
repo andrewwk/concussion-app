@@ -20,6 +20,7 @@ administered by Cerebrum through a series of questions.
 - HTML5
 - CSS3
 - Bootstrap
+- jQuery
 
 DISCLAIMER: The information contained herein should NOT be used as a substitute for the advice of an appropriately qualified and licensed physician or other health care provider. The information provided here is for informational purposes only.
 
