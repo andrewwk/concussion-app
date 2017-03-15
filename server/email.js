@@ -292,7 +292,7 @@ const data = (id, email) => {
       								<td class="content-block aligncenter">
       									<table class="results">
       										<tr>
-      											<td> <strong> Dylan Toyne <br> Assessment #${id}<!-- Id --> <br> March 9, 2017 <!-- Data --> </strong> </td>
+      											<td> <strong> Dylan Toyne <br> Assessment #${id}<!-- Id --> <br> ${conversations[id].testDate} <!-- Data --> </strong> </td>
       										</tr>
       										<tr>
       											<td>
@@ -342,8 +342,7 @@ const sendMail = (id, email) => {
     if(error) {
       console.log(error)
     }
-    console.log('Sending the email');
-    console.log(body);
+    console.log(`Sending the email to ${email}. Email content: ${body}`);
   });
 }
 
