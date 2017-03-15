@@ -5,21 +5,14 @@ const APIAI_TOKEN        = process.env.APIAI_TOKEN;
 const APP_VERIFY_TOKEN   = process.env.APP_VERIFY_TOKEN;
 const ENV                = process.env.ENV  || 'development';
 const PORT               = process.env.PORT || 8080;
-const api_key            = process.env.MAILGUN_API_KEY;
-const domain             = process.env.MAILGUN_DOMAIN;
+// const api_key            = process.env.MAILGUN_API_KEY;
+// const domain             = process.env.MAILGUN_DOMAIN;
 const express            = require('express');
 const bodyParser         = require('body-parser');
 const request            = require('request');
 const apiai              = require('apiai');
 const app                = express();
-const logger             = require('morgan');
-const knexConfig         = require('../knexfile');
-const knexLogger         = require('knex-logger');
-const knex               = require('knex')(knexConfig[ENV]);
-const MongoClient        = require('mongodb').MongoClient;
-const MONGODB_URI        = process.env.MONGODB_URI;
 const apiaiApp           = apiai(APIAI_TOKEN);
-const mailgun            = require('mailgun-js')({apiKey: api_key, domain: domain});
 const orientation        = require('./orientation'); // Functions for Orientation Tests
 const questions          = require('./dictionary'); // Object containing Test Questions
 const hydf               = questions.hydf;
@@ -38,6 +31,7 @@ const conversations      = dbReport.conversations;
 const conversationInit   = dbReport.conversationInit;
 const concentration      = require('./concentration');
 const sendMail           = require('./email');
+const mongoDB            = require('./mongo/mongo');
 
 // parse application/json
 app.use(bodyParser.json());
@@ -47,6 +41,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 app.set("view engine", "ejs");
+
 
 // Function checks whether a question has already been answered by the user.
 const filterQuestions = (question, id) => {
@@ -88,7 +83,6 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
       userReports[id].howDoYouFeel.push({ question : answer });
       updateHYDFScores(score, id);
       updateSACTotalScore(score, id);
-      showTotalScores(id);
     } else if (!filterQuestions(params, id) && isNaN(score)) {
       pushQuestion(params, id);
       userReports[id].howDoYouFeel.push({ question : answer });
@@ -157,41 +151,32 @@ const questionAnswerScore = (params, userResponse, conversationID) => {
 
   if (params == 'userEmailOptIn') {
     conversations[id].userEmail = answer;
-    console.log(`
-      User Email : ${answer}
-      `);
-      // knex('assessments')
-      // .insert({
-      //   conversation_id: id,
-      //   assessment: conversations[id]
-      // })
-      // .then((result) => {
-      //   console.log(`Successful Insertion Into DB. Result: ${result}`);
-      // })
-    db.collection('assesssments').insert(conversations[id] (err, result) => {
-      if (err) {
-        console.log(`There was an error during MongoDB insertion : ${err}`);
-      }
-    console.log(`Assessment saved successfully`);
-    })
+    mongoDB.saveDiagnosis(conversations[id])
+      .then(() => {
+        console.log(`Assessment Saved to MongoDB`)
+      })
+      .catch((err) => {
+        console.log(`Assessment Failed to Save to MongoDB ${err}`)
+      });
     sendMail(id, answer)
   }
-
 }
+// Function to parse through messages and contexts
 const contextsEvaluation = (message, conversationID) => {
   message.map((elm) => {
     if (elm.parameters) {
       for (val in elm.parameters) {
-        questionAnswerScore(val, elm.parameters[val], conversationID)
+        questionAnswerScore(val, elm.parameters[val], conversationID);
       }
     }
   })
-}
+};
+// Function to send return messages from API.AI
 const sendMessage = (event) => {
-  const message     = { id: event.sender.id, message: event.message.text}
+  const message     = { id: event.sender.id, message: event.message.text };
   const userMessage = event.message.text;
   let senderID;
-
+  // Ignores duplicated messages inside server messages
   if (event.sender.id != 274664636304054) {
     senderID = event.sender.id;
   }
@@ -244,60 +229,53 @@ const sendMessage = (event) => {
   apiai.end();
 };
 
-MongoClient.connect(MONGODB_URI, (err, db) => {
-  if (err) {
-    console.error(`Failed to connect: ${MONGODB_URI}`);
-    throw err;
-  }
 
-  app.get('/', (req, res) => {
-    res.render('index');
-  });
-
-  app.post('/', (req, res) => {
-    if (!req.body) {
-      res.status(400).json({ error: 'Invalid Request: No input in POST body' });
-    } else {
-      console.log('Submission Successful');
-    }
-  });
-
-  /* For Facebook Validation */
-  app.get('/webhook', (req, res) => {
-    console.log(`Facebook Validation - Request Query: ${req.query}`);
-    if (req.query['hub.mode'] && req.query['hub.verify_token'] === APP_VERIFY_TOKEN) {
-      console.log(`Facebook Web Hook Validation Succeeded`);
-      return res.status(200).send(req.query['hub.challenge']);
-    }
-    // otherwise, not authorized
-    return res.status(403).end();
-  });
-
-  /* Handling all messenges */
-  app.post('/webhook', (req, res) => {
-    if (req.body.object === 'page') {
-      req.body.entry.forEach((entry) => {
-        entry.messaging.forEach((event) => {
-          if (event.message && event.message.text) {
-            console.log(`
-              Sender           : ${event.sender.id}
-              Server/Me/Us/Bot : ${event.recipient.id}
-              `);
-              sendMessage(event);
-            }
-          });
-        });
-        res.status(200).end();
-      }
-    });
-    // Privacy Policy URL required for Facebook app approval
-    app.get('/privacy-policy', (req, res) => {
-      res.render('privacy-policy')
-    })
-
-    app.use((req, res) => res.status(404).send(`Error 404. This path does not exist.`));
+app.get('/', (req, res) => {
+  res.render('index');
 });
 
+app.post('/', (req, res) => {
+  if (!req.body) {
+    res.status(400).json({ error: 'Invalid Request: No input in POST body' });
+  } else {
+    console.log('Submission Successful');
+  }
+});
 
+/* For Facebook Validation */
+app.get('/webhook', (req, res) => {
+  console.log(`Facebook Validation - Request Query: ${req.query}`);
+  if (req.query['hub.mode'] && req.query['hub.verify_token'] === APP_VERIFY_TOKEN) {
+    console.log(`Facebook Web Hook Validation Succeeded`);
+    return res.status(200).send(req.query['hub.challenge']);
+  }
+  // otherwise, not authorized
+  return res.status(403).end();
+});
+
+/* Handling all messenges */
+app.post('/webhook', (req, res) => {
+  if (req.body.object === 'page') {
+    req.body.entry.forEach((entry) => {
+      entry.messaging.forEach((event) => {
+        if (event.message && event.message.text) {
+          console.log(`
+            Sender           : ${event.sender.id}
+            Server/Me/Us/Bot : ${event.recipient.id}
+            `);
+            sendMessage(event);
+          }
+        });
+      });
+      res.status(200).end();
+    }
+  });
+
+// Privacy Policy URL required for Facebook app approval
+app.get('/privacy-policy', (req, res) => {
+  res.render('privacy-policy')
+})
+
+app.use((req, res) => res.status(404).send(`Error 404. This path does not exist.`));
 
 app.listen(PORT, () => console.log(`Cerebrum listening on port ${PORT}!`));
